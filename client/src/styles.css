@@ -585,10 +585,15 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 .answer-choice.up { background: rgba(51,92,255,0.92); color: white; }
 .answer-choice.down { background: rgba(255,122,26,0.92); color: white; }
 .answer-choice.active {
-  transform: translateY(-1px);
-  box-shadow: 0 16px 34px rgba(25,23,21,0.16);
-  filter: saturate(1.12);
+  transform: scale(1.03);
+  filter: saturate(1.25) brightness(1.08);
+  outline: 3px solid rgba(255,255,255,0.82);
+  outline-offset: 3px;
 }
+.answer-choice.left.active { box-shadow: 0 0 0 7px rgba(255,77,141,0.2), 0 0 44px rgba(255,77,141,0.72); }
+.answer-choice.right.active { box-shadow: 0 0 0 7px rgba(29,187,134,0.2), 0 0 44px rgba(29,187,134,0.72); }
+.answer-choice.up.active { box-shadow: 0 0 0 7px rgba(51,92,255,0.2), 0 0 44px rgba(51,92,255,0.72); }
+.answer-choice.down.active { box-shadow: 0 0 0 7px rgba(255,122,26,0.2), 0 0 44px rgba(255,122,26,0.72); }
 .answer-choice:hover {
   transform: none;
   box-shadow: none;
