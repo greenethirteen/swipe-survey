@@ -244,7 +244,11 @@ function AuthView({ onAuthed }) {
           <section className="benefits-card">
             <div className="benefits-header">
               <span className="mini-badge hot">Built for quick signal</span>
-              <h3>Research without the form fatigue.</h3>
+              <h3>
+                Research without
+                <br />
+                the form fatigue.
+              </h3>
               <p>Prompt, publish, and read directional intent without forcing people through a long questionnaire.</p>
             </div>
             <div className="benefit-tiles">
