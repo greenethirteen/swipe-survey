@@ -9,13 +9,13 @@ const DIRECTIONS = ['left', 'right', 'up', 'down'];
 const ARROWS = { left: '⬅️', right: '➡️', up: '⬆️', down: '⬇️' };
 const DIRECTION_WORDS = { left: 'Swipe left', right: 'Swipe right', up: 'Swipe up', down: 'Swipe down' };
 const firebaseConfig = {
-  apiKey: 'AIzaSyAG128dkeBtVTKOIOn921EAl_Qc-ZD8i_U',
-  authDomain: 'swipesurvey-x.firebaseapp.com',
-  projectId: 'swipesurvey-x',
-  storageBucket: 'swipesurvey-x.firebasestorage.app',
-  messagingSenderId: '546223047361',
-  appId: '1:546223047361:web:11d988bb398f2bae2c4a40',
-  measurementId: 'G-F3PCLF65G2'
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 const firebaseApp = initializeApp(firebaseConfig);
 const firebaseAuth = getAuth(firebaseApp);
