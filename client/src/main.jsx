@@ -470,7 +470,7 @@ function blankQuestion(index) {
 }
 
 function Builder({ navigate, user, logout }) {
-  const [prompt, setPrompt] = useState('Build a 10-question survey for an NFC medical ID startup. Focus on emergency experiences, hospital confusion, stress, trust, usefulness, product acceptance, and urgency.');
+  const [prompt, setPrompt] = useState('Build a quick customer feedback survey for a new mobile app. Ask about first impressions, ease of use, favorite features, confusing moments, trust, pricing, and whether people would recommend it.');
   const [survey, setSurvey] = useState(null);
   const [savedSurvey, setSavedSurvey] = useState(null);
   const [busy, setBusy] = useState(false);
