@@ -192,7 +192,17 @@ function fallbackOption(direction, index) {
   return defaults[direction][index % defaults[direction].length];
 }
 
-function normalizeSurvey(input) {
+function clampAnswerCount(value, fallback = 4) {
+  const count = Number(value);
+  if (!Number.isFinite(count)) return fallback;
+  return Math.min(4, Math.max(2, Math.round(count)));
+}
+
+function directionsForAnswerCount(count) {
+  return DIRECTIONS.slice(0, clampAnswerCount(count));
+}
+
+function normalizeSurvey(input, preferredAnswerCount) {
   const now = new Date().toISOString();
   const title = cleanText(input?.title, 'Untitled swipe survey');
   const description = cleanText(input?.description, 'Answer each question by swiping in one of four directions.');
@@ -200,11 +210,13 @@ function normalizeSurvey(input) {
 
   const questions = rawQuestions.slice(0, 40).map((question, questionIndex) => {
     const rawOptions = Array.isArray(question.options) ? question.options : [];
+    const answerCount = preferredAnswerCount ? clampAnswerCount(preferredAnswerCount) : clampAnswerCount(rawOptions.length || 4);
+    const targetDirections = directionsForAnswerCount(answerCount);
     const optionsByDirection = new Map();
 
     rawOptions.forEach((option, optionIndex) => {
       const direction = DIRECTIONS.includes(option.direction) ? option.direction : DIRECTIONS[optionIndex % 4];
-      if (!optionsByDirection.has(direction)) {
+      if (targetDirections.includes(direction) && !optionsByDirection.has(direction)) {
         optionsByDirection.set(direction, {
           id: option.id || id(),
           direction,
@@ -214,7 +226,7 @@ function normalizeSurvey(input) {
       }
     });
 
-    const options = DIRECTIONS.map((direction) => optionsByDirection.get(direction) || {
+    const options = targetDirections.map((direction) => optionsByDirection.get(direction) || {
       id: id(),
       direction,
       label: fallbackOption(direction, questionIndex),
@@ -347,13 +359,14 @@ function exampleSurvey() {
   });
 }
 
-function normalizeSurveyRaw(raw) {
+function normalizeSurveyRaw(raw, answerCount = 4) {
+  const targetDirections = directionsForAnswerCount(answerCount);
   const questions = raw.questions.map((question, questionIndex) => ({
     id: id(),
     title: question.title || `Question ${questionIndex + 1}`,
     question: question.question,
     insight: question.insight || '',
-    options: DIRECTIONS.map((direction) => {
+    options: targetDirections.map((direction) => {
       const option = question.options.find((item) => item.direction === direction);
       return {
         id: id(),
@@ -371,7 +384,7 @@ function normalizeSurveyRaw(raw) {
   };
 }
 
-function localSurveyFromPrompt(prompt) {
+function localSurveyFromPrompt(prompt, answerCount = 4) {
   const topic = cleanText(prompt, 'Customer feedback').replace(/^build\s+/i, '').slice(0, 90);
   const title = topic.length > 12 ? `${topic} Survey` : 'Swipe Feedback Survey';
   const base = [
@@ -398,10 +411,11 @@ function localSurveyFromPrompt(prompt) {
         { direction: 'down', label: labels[3] }
       ]
     }))
-  });
+  }, answerCount);
 }
 
-function surveyJsonSchema() {
+function surveyJsonSchema(answerCount = 4) {
+  const targetDirections = directionsForAnswerCount(answerCount);
   return {
     type: 'object',
     additionalProperties: false,
@@ -423,14 +437,14 @@ function surveyJsonSchema() {
             insight: { type: 'string' },
             options: {
               type: 'array',
-              minItems: 4,
-              maxItems: 4,
+              minItems: targetDirections.length,
+              maxItems: targetDirections.length,
               items: {
                 type: 'object',
                 additionalProperties: false,
                 required: ['direction', 'label', 'value'],
                 properties: {
-                  direction: { type: 'string', enum: DIRECTIONS },
+                  direction: { type: 'string', enum: targetDirections },
                   label: { type: 'string' },
                   value: { type: 'string' }
                 }
@@ -443,8 +457,9 @@ function surveyJsonSchema() {
   };
 }
 
-async function generateWithOpenAI(prompt) {
-  if (!process.env.OPENAI_API_KEY) return localSurveyFromPrompt(prompt);
+async function generateWithOpenAI(prompt, answerCount = 4) {
+  const targetDirections = directionsForAnswerCount(answerCount);
+  if (!process.env.OPENAI_API_KEY) return localSurveyFromPrompt(prompt, answerCount);
 
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
@@ -456,9 +471,11 @@ async function generateWithOpenAI(prompt) {
       model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
       instructions: [
         'You create fun, research-useful swipe surveys.',
-        'Each question must have exactly four answers mapped to directions: left, right, up, down.',
-        'Use left for negative/low/no, right for positive/yes, up for stronger/high-intent/urgent, down for unsure/not applicable/other.',
+        `Each question must have exactly ${targetDirections.length} answers mapped only to these directions: ${targetDirections.join(', ')}.`,
+        'Use left for negative/low/no, right for positive/yes, up for stronger/high-intent/urgent when available, down for unsure/not applicable/other when available.',
         'Write in simple consumer-friendly language.',
+        'Keep the survey description short: one sentence, maximum 120 characters.',
+        'Keep answer labels short enough for mobile: ideally 1 to 4 words.',
         'Avoid collecting sensitive personal medical details, IDs, addresses, or unnecessary private information.',
         'Return valid JSON only.'
       ].join('\n'),
@@ -468,7 +485,7 @@ async function generateWithOpenAI(prompt) {
           type: 'json_schema',
           name: 'swipe_survey',
           strict: true,
-          schema: surveyJsonSchema()
+          schema: surveyJsonSchema(targetDirections.length)
         }
       }
     })
@@ -601,9 +618,10 @@ app.get('/api/surveys/example', requireAuth, (_req, res) => {
 app.post('/api/ai/survey', requireAuth, async (req, res, next) => {
   try {
     const prompt = cleanText(req.body.prompt);
+    const answerCount = clampAnswerCount(req.body.answerCount);
     if (!prompt) return res.status(400).json({ error: 'Tell the AI what kind of survey to build.' });
-    const draft = await generateWithOpenAI(prompt);
-    res.json({ survey: normalizeSurvey(draft) });
+    const draft = await generateWithOpenAI(prompt, answerCount);
+    res.json({ survey: normalizeSurvey(draft, answerCount) });
   } catch (error) {
     next(error);
   }

@@ -6,6 +6,7 @@ const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173
 const DIRECTIONS = ['left', 'right', 'up', 'down'];
 const ARROWS = { left: '⬅️', right: '➡️', up: '⬆️', down: '⬇️' };
 const DIRECTION_WORDS = { left: 'Swipe left', right: 'Swipe right', up: 'Swipe up', down: 'Swipe down' };
+const ANSWER_COUNT_OPTIONS = [2, 3, 4];
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 }
@@ -469,8 +470,16 @@ function blankQuestion(index) {
   };
 }
 
+function fallbackAnswerLabel(direction) {
+  if (direction === 'left') return 'No';
+  if (direction === 'right') return 'Yes';
+  if (direction === 'up') return 'Strong yes';
+  return 'Not sure';
+}
+
 function Builder({ navigate, user, logout }) {
   const [prompt, setPrompt] = useState('Build a quick customer feedback survey for a new mobile app. Ask about first impressions, ease of use, favorite features, confusing moments, trust, pricing, and whether people would recommend it.');
+  const [answerCount, setAnswerCount] = useState(4);
   const [survey, setSurvey] = useState(null);
   const [savedSurvey, setSavedSurvey] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -481,7 +490,7 @@ function Builder({ navigate, user, logout }) {
     setBusy(true);
     setError('');
     try {
-      const data = await api('/api/ai/survey', { method: 'POST', body: { prompt } });
+      const data = await api('/api/ai/survey', { method: 'POST', body: { prompt, answerCount } });
       setSurvey(data.survey);
       setSavedSurvey(null);
     } catch (err) {
@@ -522,6 +531,38 @@ function Builder({ navigate, user, logout }) {
     }));
   };
 
+  const removeOption = (questionIndex, direction) => {
+    setSurvey((current) => ({
+      ...current,
+      questions: current.questions.map((question, index) => {
+        if (index !== questionIndex || question.options.length <= 2) return question;
+        return {
+          ...question,
+          options: question.options.filter((option) => option.direction !== direction)
+        };
+      })
+    }));
+  };
+
+  const addOption = (questionIndex) => {
+    setSurvey((current) => ({
+      ...current,
+      questions: current.questions.map((question, index) => {
+        if (index !== questionIndex || question.options.length >= 4) return question;
+        const existingDirections = new Set(question.options.map((option) => option.direction));
+        const direction = DIRECTIONS.find((item) => !existingDirections.has(item));
+        if (!direction) return question;
+        return {
+          ...question,
+          options: [
+            ...question.options,
+            { id: makeId(), direction, label: fallbackAnswerLabel(direction), value: fallbackAnswerLabel(direction) }
+          ].sort((a, b) => DIRECTIONS.indexOf(a.direction) - DIRECTIONS.indexOf(b.direction))
+        };
+      })
+    }));
+  };
+
   const shareLink = savedSurvey ? `${window.location.origin}/s/${savedSurvey.slug}` : '';
 
   const copyShareLink = async () => {
@@ -544,6 +585,18 @@ function Builder({ navigate, user, logout }) {
             Describe your survey or write your questions here
             <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={6} />
           </label>
+          <div className="answer-count-picker" aria-label="Answer count">
+            {ANSWER_COUNT_OPTIONS.map((count) => (
+              <button
+                type="button"
+                key={count}
+                className={answerCount === count ? 'active' : ''}
+                onClick={() => setAnswerCount(count)}
+              >
+                {count} answers
+              </button>
+            ))}
+          </div>
           <button className="primary-btn builder-generate-btn" onClick={generate} disabled={busy}>{busy ? 'Building…' : 'Generate with AI'}</button>
           {error && <div className="error-box">{error}</div>}
         </section>
@@ -597,11 +650,19 @@ function Builder({ navigate, user, logout }) {
                   <div className="option-editor-grid">
                     {question.options.map((option) => (
                       <label key={option.direction} className={`option-edit ${option.direction}`}>
-                        <span>{ARROWS[option.direction]} {DIRECTION_WORDS[option.direction]}</span>
+                        <span>
+                          {ARROWS[option.direction]} {DIRECTION_WORDS[option.direction]}
+                          {question.options.length > 2 && !['left', 'right'].includes(option.direction) && (
+                            <button type="button" className="remove-answer-btn" onClick={() => removeOption(questionIndex, option.direction)}>Remove</button>
+                          )}
+                        </span>
                         <input value={option.label} onChange={(e) => updateOption(questionIndex, option.direction, e.target.value)} />
                       </label>
                     ))}
                   </div>
+                  {question.options.length < 4 && (
+                    <button className="add-answer-btn" type="button" onClick={() => addOption(questionIndex)}>+ Add answer</button>
+                  )}
                 </article>
               ))}
 
@@ -842,13 +903,15 @@ function SwipeCard({ question, onAnswer }) {
 
   const transform = `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x / 18}deg)`;
   const optionLabel = (direction) => question.options.find((item) => item.direction === direction)?.label;
+  const hasOption = (direction) => question.options.some((item) => item.direction === direction);
   const activeDirection = exitingDirection || dominantDirection;
+  const optionCount = question.options.length;
 
   return (
-    <section className="swipe-stage">
-      <div className={`answer-choice compass-choice up ${activeDirection === 'up' ? 'active' : ''}`}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></div>
+    <section className={`swipe-stage option-count-${optionCount}`}>
+      {hasOption('up') && <div className={`answer-choice compass-choice up ${activeDirection === 'up' ? 'active' : ''}`}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></div>}
       <div className="swipe-center-row">
-        <div className={`answer-choice compass-choice left ${activeDirection === 'left' ? 'active' : ''}`}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></div>
+        {hasOption('left') && <div className={`answer-choice compass-choice left ${activeDirection === 'left' ? 'active' : ''}`}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></div>}
         <article
           ref={cardRef}
           className={`swipe-card ${activeDirection ? `lean-${activeDirection}` : ''} ${exitingDirection ? `exit-${exitingDirection}` : ''}`}
@@ -862,9 +925,9 @@ function SwipeCard({ question, onAnswer }) {
           <h2>{question.question}</h2>
           {activeDirection && <div className="swipe-signal">{ARROWS[activeDirection]} {optionLabel(activeDirection)}</div>}
         </article>
-        <div className={`answer-choice compass-choice right ${activeDirection === 'right' ? 'active' : ''}`}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></div>
+        {hasOption('right') && <div className={`answer-choice compass-choice right ${activeDirection === 'right' ? 'active' : ''}`}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></div>}
       </div>
-      <div className={`answer-choice compass-choice down ${activeDirection === 'down' ? 'active' : ''}`}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></div>
+      {hasOption('down') && <div className={`answer-choice compass-choice down ${activeDirection === 'down' ? 'active' : ''}`}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></div>}
     </section>
   );
 }
