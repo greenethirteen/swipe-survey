@@ -81,6 +81,22 @@ function App() {
   return <Dashboard navigate={navigate} user={user} logout={logout} />;
 }
 
+function MobileBuildButton() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const update = () => setIsMobile(window.innerWidth <= 940);
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  if (!isMobile) return null;
+  return (
+    <a className="primary-btn build-btn" href="/?signup=1">Build a survey</a>
+  );
+}
+
 function Shell({ children, user, logout, compact = false }) {
   return (
     <div className="app-shell">
@@ -91,7 +107,7 @@ function Shell({ children, user, logout, compact = false }) {
         </div>
         <div className="topbar-actions">
           {user && <span className="muted hide-mobile">{user.email}</span>}
-          <a className="primary-btn build-btn" href="/?signup=1">Build a survey</a>
+          <MobileBuildButton />
           {logout && <button className="ghost-btn" onClick={logout}>Log out</button>}
         </div>
       </header>
@@ -779,7 +795,7 @@ function PublicShell({ children }) {
     <div className="public-shell">
       <header className="public-topbar">
         <div className="brand"><span className="brand-mark">S</span><span>SwipeSurvey™ <small>AI powered</small></span></div>
-        <a className="primary-btn build-btn" href="/?signup=1">Build a survey</a>
+        <MobileBuildButton />
       </header>
       {children}
     </div>
