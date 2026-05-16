@@ -22,6 +22,7 @@ const firebaseAuth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
 const GOOGLE_PENDING_KEY = 'swipeSurveyGooglePending';
 const GOOGLE_PENDING_TIMEOUT_MS = 30000;
+const GOOGLE_REDIRECT_SETTLE_MS = 8000;
 
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -221,7 +222,7 @@ function AuthView({ onAuthed }) {
             setBusy(false);
           });
         }
-      }, 700);
+      }, GOOGLE_REDIRECT_SETTLE_MS);
     }
 
     return unsubscribe;
