@@ -136,8 +136,8 @@ function AuthView({ onAuthed }) {
         <section className="hero-card">
           <div className="pill free-pill">Free to start</div>
           <h1><span>Swipeable</span> <span>surveys</span> <span>in minutes.</span></h1>
-          <p>
-            Build with AI, share one link, and collect fast mobile responses.
+          <p className="hero-subhead">
+            <span>Build with AI, share one link,</span> <span>and collect fast mobile responses.</span>
           </p>
           <HomeSurveyDemo />
         </section>
@@ -275,9 +275,32 @@ function HomeSurveyDemo() {
         { direction: 'up', label: 'Definitely' },
         { direction: 'down', label: 'Maybe' }
       ]
+    },
+    {
+      id: 'demo-4',
+      title: 'Urgency',
+      question: 'How urgent is this problem for your team?',
+      options: [
+        { direction: 'left', label: 'Low' },
+        { direction: 'right', label: 'Important' },
+        { direction: 'up', label: 'Critical' },
+        { direction: 'down', label: 'Unknown' }
+      ]
+    },
+    {
+      id: 'demo-5',
+      title: 'Follow-up',
+      question: 'Would you want a deeper interview after this?',
+      options: [
+        { direction: 'left', label: 'No' },
+        { direction: 'right', label: 'Yes' },
+        { direction: 'up', label: 'Book it' },
+        { direction: 'down', label: 'Later' }
+      ]
     }
   ];
   const [answers, setAnswers] = useState([]);
+  const [exitingDirection, setExitingDirection] = useState(null);
   const current = demoQuestions[answers.length];
   const questionIndex = answers.length;
   const done = answers.length === demoQuestions.length;
@@ -295,7 +318,19 @@ function HomeSurveyDemo() {
           </div>
           {!done ? (
             <>
-              <DemoCompassCard key={current.id} question={current} onAnswer={(direction) => setAnswers([...answers, direction])} />
+              <DemoCompassCard
+                key={current.id}
+                question={current}
+                exitingDirection={exitingDirection}
+                onAnswer={(direction) => {
+                  if (exitingDirection) return;
+                  setExitingDirection(direction);
+                  setTimeout(() => {
+                    setAnswers((items) => [...items, direction]);
+                    setExitingDirection(null);
+                  }, 220);
+                }}
+              />
               <p className="demo-hint">Swipe the black card toward an answer.</p>
             </>
           ) : (
@@ -312,7 +347,7 @@ function HomeSurveyDemo() {
   );
 }
 
-function DemoCompassCard({ question, onAnswer }) {
+function DemoCompassCard({ question, onAnswer, exitingDirection }) {
   const [drag, setDrag] = useState({ active: false, startX: 0, startY: 0, x: 0, y: 0 });
   const cardRef = useRef(null);
   const optionLabel = (direction) => question.options.find((item) => item.direction === direction)?.label;
@@ -345,7 +380,7 @@ function DemoCompassCard({ question, onAnswer }) {
         <div className={`answer-choice compact left ${dominantDirection === 'left' ? 'active' : ''}`}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></div>
         <div
           ref={cardRef}
-          className={`demo-question-card ${dominantDirection ? `lean-${dominantDirection}` : ''}`}
+          className={`demo-question-card ${dominantDirection ? `lean-${dominantDirection}` : ''} ${exitingDirection ? `exit-${exitingDirection}` : ''}`}
           style={{ transform }}
           onPointerDown={pointerDown}
           onPointerMove={pointerMove}

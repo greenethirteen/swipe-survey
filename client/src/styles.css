@@ -300,6 +300,10 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
   animation: demo-question-enter 0.28s ease both;
 }
+.demo-question-card.exit-left { animation: demo-exit-left 0.22s ease forwards; }
+.demo-question-card.exit-right { animation: demo-exit-right 0.22s ease forwards; }
+.demo-question-card.exit-up { animation: demo-exit-up 0.22s ease forwards; }
+.demo-question-card.exit-down { animation: demo-exit-down 0.22s ease forwards; }
 .demo-question-card:active { cursor: grabbing; }
 .demo-question-card .mini-badge {
   color: rgba(255,255,255,0.72);
@@ -315,6 +319,18 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 @keyframes demo-question-enter {
   from { opacity: 0; filter: blur(4px); }
   to { opacity: 1; filter: blur(0); }
+}
+@keyframes demo-exit-left {
+  to { opacity: 0; transform: translateX(-130%) rotate(-10deg); }
+}
+@keyframes demo-exit-right {
+  to { opacity: 0; transform: translateX(130%) rotate(10deg); }
+}
+@keyframes demo-exit-up {
+  to { opacity: 0; transform: translateY(-120%) rotate(-5deg); }
+}
+@keyframes demo-exit-down {
+  to { opacity: 0; transform: translateY(120%) rotate(5deg); }
 }
 .demo-hint {
   text-align: center;
@@ -653,6 +669,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   main, .topbar, .public-topbar { width: min(100% - 20px, 1180px); }
   h1 { font-size: 52px; line-height: 0.86; letter-spacing: -0.025em; margin-bottom: 0; }
   .hero-card h1 span { display: block; }
+  .hero-subhead span { display: block; }
   p { line-height: 1.28; }
   .pill { margin-bottom: 8px; }
   .survey-grid, .option-editor-grid, .metric-grid, .direction-summary { grid-template-columns: 1fr; }
