@@ -293,7 +293,7 @@ function HomeSurveyDemo() {
         {!done ? (
           <>
             <DemoCompassCard question={current} onAnswer={(direction) => setAnswers([...answers, direction])} />
-            <p className="demo-hint">Tap a direction to answer.</p>
+        <p className="demo-hint">Swipe the black card toward an answer.</p>
           </>
         ) : (
           <div className="demo-final">
@@ -309,19 +309,51 @@ function HomeSurveyDemo() {
 }
 
 function DemoCompassCard({ question, onAnswer }) {
+  const [drag, setDrag] = useState({ active: false, startX: 0, startY: 0, x: 0, y: 0 });
+  const cardRef = useRef(null);
   const optionLabel = (direction) => question.options.find((item) => item.direction === direction)?.label;
+  const dominantDirection = useMemo(() => {
+    const { x, y } = drag;
+    if (Math.abs(x) < 24 && Math.abs(y) < 24) return null;
+    if (Math.abs(x) > Math.abs(y)) return x > 0 ? 'right' : 'left';
+    return y > 0 ? 'down' : 'up';
+  }, [drag]);
+  const pointerDown = (event) => {
+    cardRef.current?.setPointerCapture?.(event.pointerId);
+    setDrag({ active: true, startX: event.clientX, startY: event.clientY, x: 0, y: 0 });
+  };
+  const pointerMove = (event) => {
+    if (!drag.active) return;
+    setDrag((current) => ({ ...current, x: event.clientX - current.startX, y: event.clientY - current.startY }));
+  };
+  const pointerUp = () => {
+    const distance = Math.max(Math.abs(drag.x), Math.abs(drag.y));
+    const direction = dominantDirection;
+    setDrag({ active: false, startX: 0, startY: 0, x: 0, y: 0 });
+    if (distance > 54 && direction) onAnswer(direction);
+  };
+  const transform = `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x / 18}deg)`;
+
   return (
     <div className="demo-compass">
-      <button className="answer-choice compact up" onClick={() => onAnswer('up')}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></button>
+      <div className={`answer-choice compact up ${dominantDirection === 'up' ? 'active' : ''}`}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></div>
       <div className="demo-compass-row">
-        <button className="answer-choice compact left" onClick={() => onAnswer('left')}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></button>
-        <div className="demo-question-card">
+        <div className={`answer-choice compact left ${dominantDirection === 'left' ? 'active' : ''}`}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></div>
+        <div
+          ref={cardRef}
+          className={`demo-question-card ${dominantDirection ? `lean-${dominantDirection}` : ''}`}
+          style={{ transform }}
+          onPointerDown={pointerDown}
+          onPointerMove={pointerMove}
+          onPointerUp={pointerUp}
+          onPointerCancel={pointerUp}
+        >
           <span className="mini-badge">{question.title}</span>
           <h2>{question.question}</h2>
         </div>
-        <button className="answer-choice compact right" onClick={() => onAnswer('right')}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></button>
+        <div className={`answer-choice compact right ${dominantDirection === 'right' ? 'active' : ''}`}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></div>
       </div>
-      <button className="answer-choice compact down" onClick={() => onAnswer('down')}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></button>
+      <div className={`answer-choice compact down ${dominantDirection === 'down' ? 'active' : ''}`}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></div>
     </div>
   );
 }
@@ -723,9 +755,9 @@ function SwipeCard({ question, onAnswer }) {
 
   return (
     <section className="swipe-stage">
-      <button className="answer-choice compass-choice up" onClick={() => onAnswer('up')}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></button>
+      <div className={`answer-choice compass-choice up ${dominantDirection === 'up' ? 'active' : ''}`}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></div>
       <div className="swipe-center-row">
-        <button className="answer-choice compass-choice left" onClick={() => onAnswer('left')}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></button>
+        <div className={`answer-choice compass-choice left ${dominantDirection === 'left' ? 'active' : ''}`}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></div>
         <article
           ref={cardRef}
           className={`swipe-card ${dominantDirection ? `lean-${dominantDirection}` : ''}`}
@@ -739,9 +771,9 @@ function SwipeCard({ question, onAnswer }) {
           <h2>{question.question}</h2>
           {dominantDirection && <div className="swipe-signal">{ARROWS[dominantDirection]} {optionLabel(dominantDirection)}</div>}
         </article>
-        <button className="answer-choice compass-choice right" onClick={() => onAnswer('right')}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></button>
+        <div className={`answer-choice compass-choice right ${dominantDirection === 'right' ? 'active' : ''}`}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></div>
       </div>
-      <button className="answer-choice compass-choice down" onClick={() => onAnswer('down')}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></button>
+      <div className={`answer-choice compass-choice down ${dominantDirection === 'down' ? 'active' : ''}`}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></div>
     </section>
   );
 }

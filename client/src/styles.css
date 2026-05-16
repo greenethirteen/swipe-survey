@@ -227,8 +227,10 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 .demo-compass {
   display: grid;
   gap: 10px;
+  justify-items: center;
 }
 .demo-compass-row {
+  width: 100%;
   display: grid;
   grid-template-columns: minmax(90px, 0.58fr) minmax(0, 1.7fr) minmax(90px, 0.58fr);
   gap: 10px;
@@ -242,7 +244,14 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   color: white;
   display: grid;
   align-content: center;
+  user-select: none;
+  cursor: grab;
+  touch-action: none;
+  position: relative;
+  z-index: 2;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
+.demo-question-card:active { cursor: grabbing; }
 .demo-question-card .mini-badge {
   color: rgba(255,255,255,0.72);
   border-color: rgba(255,255,255,0.18);
@@ -461,10 +470,9 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   width: 100%;
   min-height: 330px;
   border-radius: 42px;
-  background:
-    radial-gradient(circle at 20% 12%, rgba(255,255,255,0.92), transparent 30%),
-    linear-gradient(145deg, #ffffff, #fbf3e7);
-  border: 1px solid rgba(255,255,255,0.65);
+  background: var(--ink);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.18);
   box-shadow: 0 28px 80px rgba(25,23,21,0.22);
   padding: 34px;
   display: flex;
@@ -478,6 +486,11 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   z-index: 2;
 }
 .swipe-card:active { cursor: grabbing; }
+.swipe-card .mini-badge {
+  color: rgba(255,255,255,0.72);
+  border-color: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.08);
+}
 .swipe-card h2 {
   font-size: 38px;
   line-height: 1.02;
@@ -512,6 +525,8 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   text-align: left;
   background: rgba(255,255,255,0.86);
   overflow-wrap: anywhere;
+  border: 0;
+  box-shadow: none;
 }
 .answer-choice span { font-size: 22px; }
 .answer-choice strong { line-height: 1.18; }
@@ -525,15 +540,26 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   width: min(360px, 100%);
   align-self: stretch;
 }
+.swipe-stage > .answer-choice.compass-choice { width: min(540px, 100%); }
+.demo-compass > .answer-choice.compact { width: 59%; }
 .swipe-center-row .answer-choice {
   width: 100%;
   min-height: 100%;
   align-content: center;
 }
-.answer-choice.left { border-left: 5px solid var(--pink); }
-.answer-choice.right { border-left: 5px solid var(--green); }
-.answer-choice.up { border-left: 5px solid var(--blue); }
-.answer-choice.down { border-left: 5px solid var(--orange); }
+.answer-choice.left { background: rgba(255,77,141,0.9); color: white; }
+.answer-choice.right { background: rgba(29,187,134,0.92); color: white; }
+.answer-choice.up { background: rgba(51,92,255,0.92); color: white; }
+.answer-choice.down { background: rgba(255,122,26,0.92); color: white; }
+.answer-choice.active {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(25,23,21,0.16);
+  filter: saturate(1.12);
+}
+.answer-choice:hover {
+  transform: none;
+  box-shadow: none;
+}
 .keyboard-hint { text-align: center; font-weight: 700; }
 .thank-you-card { width: min(680px, calc(100% - 32px)); margin: 80px auto; padding: 54px; text-align: center; }
 .confetti { font-size: 66px; margin-bottom: 12px; }
@@ -564,6 +590,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
     grid-template-columns: minmax(74px, 0.55fr) minmax(0, 1.5fr) minmax(74px, 0.55fr);
     gap: 7px;
   }
+  .demo-compass > .answer-choice.compact { width: 50%; }
   .demo-question-card { min-height: 150px; padding: 14px; border-radius: 18px; }
   .demo-question-card h2 { font-size: 19px; }
   .answer-choice.compact { min-height: 50px; padding: 8px; font-size: 12px; }
@@ -578,6 +605,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
     grid-template-columns: minmax(76px, 0.52fr) minmax(0, 1.5fr) minmax(76px, 0.52fr);
     gap: 7px;
   }
+  .swipe-stage > .answer-choice.compass-choice { width: 50%; }
   .swipe-card { min-height: 240px; padding: 18px; border-radius: 24px; }
   .swipe-card h2 { font-size: 24px; letter-spacing: -0.02em; }
   .answer-choice { min-height: 54px; padding: 9px; font-size: 12px; border-radius: 14px; }
