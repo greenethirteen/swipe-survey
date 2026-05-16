@@ -475,6 +475,15 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   padding-bottom: 56px;
 }
 .builder-panel, .editor-panel, .share-panel { padding: 24px; }
+.builder-panel.creator-start {
+  background:
+    linear-gradient(145deg, rgba(255,255,255,0.9), rgba(247,255,250,0.82)),
+    radial-gradient(circle at 0% 0%, rgba(29,187,134,0.2), transparent 38%),
+    radial-gradient(circle at 100% 12%, rgba(51,92,255,0.18), transparent 34%),
+    radial-gradient(circle at 50% 100%, rgba(255,122,26,0.16), transparent 34%);
+  border-color: rgba(29,187,134,0.2);
+  box-shadow: 0 30px 90px rgba(25,23,21,0.12), inset 0 0 0 1px rgba(255,255,255,0.5);
+}
 .creator-start {
   display: grid;
   gap: 10px;
@@ -492,11 +501,18 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 }
 .builder-start-top .back-btn {
   margin-bottom: 0;
+  background: rgba(255,255,255,0.72);
+}
+.builder-start-top .pill {
+  background: rgba(51,92,255,0.12);
+  color: #1c3495;
+  border-color: rgba(51,92,255,0.18);
 }
 .creator-start h1 {
   max-width: 560px;
   margin-bottom: 0;
   line-height: 0.94;
+  color: #12231d;
 }
 .creator-start label {
   width: min(460px, 100%);
@@ -506,6 +522,13 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 }
 .creator-start textarea {
   min-height: 180px;
+  background: rgba(255,255,255,0.86);
+  border-color: rgba(29,187,134,0.18);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 18px 50px rgba(29,187,134,0.08);
+}
+.builder-generate-btn {
+  background: linear-gradient(135deg, var(--green), var(--blue));
+  box-shadow: 0 18px 48px rgba(51,92,255,0.24);
 }
 .sticky-panel { position: sticky; top: 16px; }
 .share-panel {

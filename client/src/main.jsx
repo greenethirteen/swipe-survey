@@ -541,7 +541,7 @@ function Builder({ navigate, user, logout }) {
             Describe your survey or write your questions here
             <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={6} />
           </label>
-          <button className="primary-btn" onClick={generate} disabled={busy}>{busy ? 'Building…' : 'Generate with AI'}</button>
+          <button className="primary-btn builder-generate-btn" onClick={generate} disabled={busy}>{busy ? 'Building…' : 'Generate with AI'}</button>
           {error && <div className="error-box">{error}</div>}
         </section>
 
