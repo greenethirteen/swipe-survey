@@ -141,31 +141,48 @@ function AuthView({ onAuthed }) {
           <HomeSurveyDemo />
         </section>
 
-        <form className="auth-card" onSubmit={submit}>
-          <div className="pill free-pill">Free to start</div>
-          <h2>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
-          <p className="muted">Your dashboard stores surveys and results locally through the Node server.</p>
-          {mode === 'signup' && (
+        <div className="auth-side">
+          <form className="auth-card" onSubmit={submit}>
+            <div className="pill free-pill">Free to start</div>
+            <h2>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
+            <p className="muted">Your dashboard stores surveys and results locally through the Node server.</p>
+            {mode === 'signup' && (
+              <label>
+                Name
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Abdullah" />
+              </label>
+            )}
             <label>
-              Name
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Abdullah" />
+              Email
+              <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@email.com" required />
             </label>
-          )}
-          <label>
-            Email
-            <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@email.com" required />
-          </label>
-          <label>
-            Password
-            <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 6 characters" required />
-          </label>
-          {error && <div className="error-box">{error}</div>}
-          <button className="primary-btn" disabled={busy}>{busy ? 'One sec…' : mode === 'signup' ? 'Sign up' : 'Log in'}</button>
-          <button type="button" className="link-btn" onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}>
-            {mode === 'signup' ? 'Already have an account? Log in' : 'Need an account? Sign up'}
-          </button>
-        </form>
+            <label>
+              Password
+              <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 6 characters" required />
+            </label>
+            {error && <div className="error-box">{error}</div>}
+            <button className="primary-btn" disabled={busy}>{busy ? 'One sec…' : mode === 'signup' ? 'Sign up' : 'Log in'}</button>
+            <button type="button" className="link-btn" onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}>
+              {mode === 'signup' ? 'Already have an account? Log in' : 'Need an account? Sign up'}
+            </button>
+          </form>
+
+          <section className="benefits-card">
+            <h3>Why teams use it</h3>
+            <ul>
+              <li><strong>Higher completion.</strong> Swipe answers feel lighter than long forms.</li>
+              <li><strong>Faster setup.</strong> AI drafts a useful survey from one prompt.</li>
+              <li><strong>Easy sharing.</strong> One mobile-friendly link works anywhere.</li>
+              <li><strong>Cleaner signals.</strong> Directional answers make patterns easy to read.</li>
+            </ul>
+          </section>
+        </div>
       </main>
+      <footer className="site-footer">
+        <span>SwipeSurvey™ - AI powered</span>
+        <span>Built in Abu Dhabi</span>
+        <span>© 2026 SwipeSurvey. All rights reserved.</span>
+      </footer>
     </Shell>
   );
 }

@@ -150,7 +150,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   align-items: start;
   padding-bottom: 60px;
 }
-.hero-card, .auth-card, .dashboard-hero, .empty-state, .survey-card, .builder-panel, .editor-panel, .builder-empty, .share-panel, .stats-hero, .metric-card, .stats-card, .thank-you-card {
+.hero-card, .auth-card, .benefits-card, .dashboard-hero, .empty-state, .survey-card, .builder-panel, .editor-panel, .builder-empty, .share-panel, .stats-hero, .metric-card, .stats-card, .thank-you-card {
   border: 1px solid var(--line);
   background: var(--card);
   backdrop-filter: blur(18px);
@@ -164,6 +164,34 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 .auth-card .free-pill { margin-bottom: 14px; }
 .auth-card h2 { margin-bottom: 8px; }
 .auth-card > p { margin-bottom: 12px; }
+.auth-side { display: grid; gap: 18px; }
+.benefits-card { padding: 24px; }
+.benefits-card h3 { margin-bottom: 14px; }
+.benefits-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.benefits-card li {
+  color: var(--muted);
+  line-height: 1.35;
+  padding-left: 14px;
+  border-left: 4px solid rgba(51,92,255,0.26);
+}
+.benefits-card strong { color: var(--ink); }
+.site-footer {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 0 0 34px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  color: var(--muted);
+  font-weight: 800;
+  font-size: 13px;
+}
 
 .error-box, .toast {
   border-radius: 18px;
@@ -680,6 +708,9 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   .topbar { align-items: flex-start; }
   .auth-grid { gap: 12px; padding-bottom: 24px; }
   .hero-card, .auth-card { padding: 18px; border-radius: 20px; gap: 8px; }
+  .auth-side { gap: 12px; }
+  .benefits-card { padding: 18px; border-radius: 20px; }
+  .site-footer { width: min(100% - 20px, 1180px); padding-bottom: 24px; }
   .hero-card p { margin-bottom: 0; }
   .dashboard-hero { padding: 22px; }
   .hero-actions { align-items: stretch; }
