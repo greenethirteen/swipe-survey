@@ -298,12 +298,12 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   position: relative;
   z-index: 2;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
-  animation: demo-question-enter 0.28s ease both;
+  animation: demo-question-enter 0.38s ease both;
 }
-.demo-question-card.exit-left { animation: demo-exit-left 0.22s ease forwards; }
-.demo-question-card.exit-right { animation: demo-exit-right 0.22s ease forwards; }
-.demo-question-card.exit-up { animation: demo-exit-up 0.22s ease forwards; }
-.demo-question-card.exit-down { animation: demo-exit-down 0.22s ease forwards; }
+.demo-question-card.exit-left { animation: demo-exit-left 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.demo-question-card.exit-right { animation: demo-exit-right 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.demo-question-card.exit-up { animation: demo-exit-up 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.demo-question-card.exit-down { animation: demo-exit-down 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 .demo-question-card:active { cursor: grabbing; }
 .demo-question-card .mini-badge {
   color: rgba(255,255,255,0.72);
@@ -317,7 +317,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   letter-spacing: -0.015em;
 }
 @keyframes demo-question-enter {
-  from { opacity: 0; filter: blur(4px); }
+  from { opacity: 0; filter: blur(4px); transform: scale(0.98); }
   to { opacity: 1; filter: blur(0); }
 }
 @keyframes demo-exit-left {

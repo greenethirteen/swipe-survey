@@ -328,7 +328,7 @@ function HomeSurveyDemo() {
                   setTimeout(() => {
                     setAnswers((items) => [...items, direction]);
                     setExitingDirection(null);
-                  }, 220);
+                  }, 420);
                 }}
               />
               <p className="demo-hint">Swipe the black card toward an answer.</p>
