@@ -102,8 +102,20 @@ function MobileBuildButton() {
   }, []);
 
   if (!isMobile) return null;
+  const handleClick = (e) => {
+    // If there's a signup/create form on the current page, scroll to it instead of navigating.
+    const target = document.querySelector('.auth-card') || document.querySelector('.auth-side') || document.querySelector('form.auth-card');
+    if (target) {
+      e.preventDefault();
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const input = target.querySelector('input');
+      if (input) input.focus();
+    }
+    // Otherwise let the link navigate to the signup query (server or full reload)
+  };
+
   return (
-    <a className="primary-btn build-btn" href="/?signup=1">Build a survey</a>
+    <a className="primary-btn build-btn" href="/?signup=1" onClick={handleClick}>Build a survey</a>
   );
 }
 
