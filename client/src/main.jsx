@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { initializeApp } from 'firebase/app';
-import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, signOut } from 'firebase/auth';
+import { browserLocalPersistence, getAuth, getRedirectResult, GoogleAuthProvider, setPersistence, signInWithPopup, signInWithRedirect, signOut } from 'firebase/auth';
 import './styles.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8787' : '');
@@ -21,6 +21,7 @@ const firebaseApp = initializeApp(firebaseConfig);
 const firebaseAuth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
+const GOOGLE_REDIRECT_KEY = 'swipeSurveyGoogleRedirect';
 
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -69,6 +70,11 @@ function withTimeout(promise, timeoutMs, message) {
     timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
   });
   return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeout));
+}
+
+function isSafariBrowser() {
+  const ua = navigator.userAgent;
+  return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(ua);
 }
 
 function useRoute() {
@@ -167,6 +173,37 @@ function AuthView({ onAuthed }) {
 
   useEffect(() => {
     sessionStorage.removeItem('swipeSurveyGooglePending');
+    const hadRedirect = sessionStorage.getItem(GOOGLE_REDIRECT_KEY);
+    if (!hadRedirect) return;
+
+    let cancelled = false;
+    setBusy(true);
+    setError('');
+
+    getRedirectResult(firebaseAuth)
+      .then(async (credential) => {
+        if (cancelled) return;
+        const firebaseUser = credential?.user || firebaseAuth.currentUser;
+        if (!firebaseUser) throw new Error('Google did not return a signed-in account. Please try again.');
+        const idToken = await withTimeout(
+          firebaseUser.getIdToken(),
+          10000,
+          'Google signed in, but the account token took too long. Please try again.'
+        );
+        const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken }, timeoutMs: 15000 });
+        sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
+        onAuthed(data);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
+        setError(err.message || 'Google sign-in failed. Please try again.');
+        setBusy(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const submit = async (event) => {
@@ -188,6 +225,11 @@ function AuthView({ onAuthed }) {
     setError('');
     try {
       await setPersistence(firebaseAuth, browserLocalPersistence);
+      if (isSafariBrowser()) {
+        sessionStorage.setItem(GOOGLE_REDIRECT_KEY, '1');
+        await signInWithRedirect(firebaseAuth, googleProvider);
+        return;
+      }
       const credential = await signInWithPopup(firebaseAuth, googleProvider);
       const idToken = await withTimeout(
         credential.user.getIdToken(),
@@ -209,6 +251,7 @@ function AuthView({ onAuthed }) {
   };
 
   const resetSignIn = () => {
+    sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
     setBusy(false);
     setError('');
   };
