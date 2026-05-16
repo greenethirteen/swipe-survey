@@ -103,13 +103,36 @@ function MobileBuildButton() {
 
   if (!isMobile) return null;
   const handleClick = (e) => {
-    // If there's a signup/create form on the current page, scroll to it instead of navigating.
+    // If there's a signup/create form on the current page, smooth-scroll to its top
     const target = document.querySelector('.auth-card') || document.querySelector('.auth-side') || document.querySelector('form.auth-card');
     if (target) {
       e.preventDefault();
-      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      const input = target.querySelector('input');
-      if (input) input.focus();
+
+      const header = document.querySelector('.topbar');
+      const headerHeight = header ? header.getBoundingClientRect().height : 0;
+      const rect = target.getBoundingClientRect();
+      const targetY = Math.max(0, window.scrollY + rect.top - headerHeight - 8);
+
+      // Smooth scroll with easing for a nicer feel across browsers
+      const smoothScrollTo = (to, duration = 700) => {
+        const start = window.scrollY || window.pageYOffset;
+        const change = to - start;
+        const startTime = performance.now();
+        const ease = (t) => 0.5 * (1 - Math.cos(Math.PI * t)); // cosine easing
+        const animate = (now) => {
+          const elapsed = Math.min(1, (now - startTime) / duration);
+          window.scrollTo(0, Math.round(start + change * ease(elapsed)));
+          if (elapsed < 1) requestAnimationFrame(animate);
+        };
+        requestAnimationFrame(animate);
+      };
+
+      smoothScrollTo(targetY, 700);
+      // Focus the first input shortly after scrolling begins
+      setTimeout(() => {
+        const input = target.querySelector('input, textarea, button');
+        if (input) input.focus();
+      }, 780);
     }
     // Otherwise let the link navigate to the signup query (server or full reload)
   };
