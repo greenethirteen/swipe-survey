@@ -157,10 +157,11 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
-.hero-card { padding: clamp(28px, 5vw, 54px); display: grid; gap: 12px; }
+.hero-card { padding: clamp(28px, 5vw, 54px); display: grid; gap: 14px; }
 .hero-card h1 { margin-bottom: 0; line-height: 0.84; }
 .hero-card p { margin-bottom: 2px; }
 .auth-card { padding: 28px; }
+.auth-card .free-pill { margin-bottom: 14px; }
 .auth-card h2 { margin-bottom: 8px; }
 .auth-card > p { margin-bottom: 12px; }
 
