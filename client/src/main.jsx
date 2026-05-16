@@ -139,10 +139,7 @@ function AuthView({ onAuthed }) {
           <p>
             Build a survey manually or let AI create it from a prompt. Share a link. Let people answer by swiping left, right, up, or down.
           </p>
-          <div className="direction-demo">
-            <span>⬅️ No</span><span>➡️ Yes</span><span>⬆️ Strong yes</span><span>⬇️ Unsure</span>
-          </div>
-          <AnimatedSurveyDemo />
+          <HomeSurveyDemo />
         </section>
 
         <form className="auth-card" onSubmit={submit}>
@@ -244,38 +241,87 @@ function Dashboard({ navigate, user, logout }) {
   );
 }
 
-function AnimatedSurveyDemo() {
-  const demoAnswers = [
-    { direction: 'right', label: 'Useful' },
-    { direction: 'up', label: 'Very interested' },
-    { direction: 'left', label: 'Not today' }
+function HomeSurveyDemo() {
+  const demoQuestions = [
+    {
+      id: 'demo-1',
+      title: 'Product feedback',
+      question: 'Would this help your team make faster decisions?',
+      options: [
+        { direction: 'left', label: 'Not really' },
+        { direction: 'right', label: 'Yes' },
+        { direction: 'up', label: 'Absolutely' },
+        { direction: 'down', label: 'Not sure' }
+      ]
+    },
+    {
+      id: 'demo-2',
+      title: 'Buying intent',
+      question: 'How likely would you be to try this next week?',
+      options: [
+        { direction: 'left', label: 'Unlikely' },
+        { direction: 'right', label: 'Likely' },
+        { direction: 'up', label: 'Very likely' },
+        { direction: 'down', label: 'Need details' }
+      ]
+    },
+    {
+      id: 'demo-3',
+      title: 'Sharing',
+      question: 'Would you send this survey to a customer?',
+      options: [
+        { direction: 'left', label: 'No' },
+        { direction: 'right', label: 'Yes' },
+        { direction: 'up', label: 'Definitely' },
+        { direction: 'down', label: 'Maybe' }
+      ]
+    }
   ];
+  const [answers, setAnswers] = useState([]);
+  const current = demoQuestions[answers.length];
+  const done = answers.length === demoQuestions.length;
+  const positive = answers.filter((answer) => answer === 'right' || answer === 'up').length;
+  const score = Math.round((positive / demoQuestions.length) * 100);
 
   return (
-    <div className="survey-demo" aria-label="Sample survey animation">
-      <div className="demo-phone">
+    <div className="survey-demo" aria-label="Try a sample swipe survey">
+      <div className="demo-shell">
         <div className="demo-top">
-          <span>PulseCheck</span>
-          <strong>3 questions</strong>
+          <span>Try the demo</span>
+          <strong>{done ? 'Result' : `${answers.length + 1} / ${demoQuestions.length}`}</strong>
         </div>
-        <div className="demo-card">
-          <span className="mini-badge">Product feedback</span>
-          <h2>Would this help your team make faster decisions?</h2>
-        </div>
-        <div className="demo-answer-stack">
-          {demoAnswers.map((answer, index) => (
-            <div className={`demo-answer ${answer.direction}`} style={{ animationDelay: `${index * 1.2}s` }} key={answer.label}>
-              <span>{ARROWS[answer.direction]}</span>
-              <strong>{answer.label}</strong>
-            </div>
-          ))}
-        </div>
+        {!done ? (
+          <>
+            <DemoCompassCard question={current} onAnswer={(direction) => setAnswers([...answers, direction])} />
+            <p className="demo-hint">Tap a direction to answer.</p>
+          </>
+        ) : (
+          <div className="demo-final">
+            <span className="mini-badge">Demo result</span>
+            <strong>{score}%</strong>
+            <p>{positive} of {demoQuestions.length} answers showed positive intent.</p>
+            <button className="primary-btn" onClick={() => setAnswers([])}>Try again</button>
+          </div>
+        )}
       </div>
-      <div className="demo-result">
-        <span>Live result</span>
-        <strong>87%</strong>
-        <small>would share feedback again</small>
+    </div>
+  );
+}
+
+function DemoCompassCard({ question, onAnswer }) {
+  const optionLabel = (direction) => question.options.find((item) => item.direction === direction)?.label;
+  return (
+    <div className="demo-compass">
+      <button className="answer-choice compact up" onClick={() => onAnswer('up')}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></button>
+      <div className="demo-compass-row">
+        <button className="answer-choice compact left" onClick={() => onAnswer('left')}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></button>
+        <div className="demo-question-card">
+          <span className="mini-badge">{question.title}</span>
+          <h2>{question.question}</h2>
+        </div>
+        <button className="answer-choice compact right" onClick={() => onAnswer('right')}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></button>
       </div>
+      <button className="answer-choice compact down" onClick={() => onAnswer('down')}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></button>
     </div>
   );
 }
@@ -673,31 +719,29 @@ function SwipeCard({ question, onAnswer }) {
   };
 
   const transform = `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x / 18}deg)`;
+  const optionLabel = (direction) => question.options.find((item) => item.direction === direction)?.label;
 
   return (
     <section className="swipe-stage">
-      <article
-        ref={cardRef}
-        className={`swipe-card ${dominantDirection ? `lean-${dominantDirection}` : ''}`}
-        style={{ transform }}
-        onPointerDown={pointerDown}
-        onPointerMove={pointerMove}
-        onPointerUp={pointerUp}
-        onPointerCancel={pointerUp}
-      >
-        <div className="mini-badge">{question.title}</div>
-        <h2>{question.question}</h2>
-        {dominantDirection && <div className="swipe-signal">{ARROWS[dominantDirection]} {question.options.find((item) => item.direction === dominantDirection)?.label}</div>}
-      </article>
-
-      <div className="answer-grid" aria-label="Answer choices">
-        {DIRECTIONS.map((direction) => (
-          <button className={`answer-choice ${direction}`} key={direction} onClick={() => onAnswer(direction)}>
-            <span>{ARROWS[direction]}</span>
-            <strong>{question.options.find((item) => item.direction === direction)?.label}</strong>
-          </button>
-        ))}
+      <button className="answer-choice compass-choice up" onClick={() => onAnswer('up')}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></button>
+      <div className="swipe-center-row">
+        <button className="answer-choice compass-choice left" onClick={() => onAnswer('left')}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></button>
+        <article
+          ref={cardRef}
+          className={`swipe-card ${dominantDirection ? `lean-${dominantDirection}` : ''}`}
+          style={{ transform }}
+          onPointerDown={pointerDown}
+          onPointerMove={pointerMove}
+          onPointerUp={pointerUp}
+          onPointerCancel={pointerUp}
+        >
+          <div className="mini-badge">{question.title}</div>
+          <h2>{question.question}</h2>
+          {dominantDirection && <div className="swipe-signal">{ARROWS[dominantDirection]} {optionLabel(dominantDirection)}</div>}
+        </article>
+        <button className="answer-choice compass-choice right" onClick={() => onAnswer('right')}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></button>
       </div>
+      <button className="answer-choice compass-choice down" onClick={() => onAnswer('down')}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></button>
     </section>
   );
 }
