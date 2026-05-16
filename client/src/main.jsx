@@ -89,12 +89,11 @@ function Shell({ children, user, logout, compact = false }) {
           <span className="brand-mark">S</span>
           <span>SwipeSurvey™ <small>AI powered</small></span>
         </div>
-        {!compact && (
-          <div className="topbar-actions">
-            {user && <span className="muted hide-mobile">{user.email}</span>}
-            {logout && <button className="ghost-btn" onClick={logout}>Log out</button>}
-          </div>
-        )}
+        <div className="topbar-actions">
+          {user && <span className="muted hide-mobile">{user.email}</span>}
+          <a className="primary-btn build-btn" href="/?signup=1">Build a survey</a>
+          {logout && <button className="ghost-btn" onClick={logout}>Log out</button>}
+        </div>
       </header>
       {children}
     </div>
@@ -144,8 +143,8 @@ function AuthView({ onAuthed }) {
 
         <div className="auth-side">
           <form className="auth-card" onSubmit={submit}>
-            <h2>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
-            <p className="muted">Your dashboard stores surveys and results locally through the Node server.</p>
+            <h2>{mode === 'signup' ? 'Create a survey' : 'Welcome back'}</h2>
+            <p className="muted">Save and revisit your surveys anytime.</p>
             {mode === 'signup' && (
               <label>
                 Name
@@ -780,6 +779,7 @@ function PublicShell({ children }) {
     <div className="public-shell">
       <header className="public-topbar">
         <div className="brand"><span className="brand-mark">S</span><span>SwipeSurvey™ <small>AI powered</small></span></div>
+        <a className="primary-btn build-btn" href="/?signup=1">Build a survey</a>
       </header>
       {children}
     </div>

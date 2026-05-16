@@ -68,7 +68,16 @@ textarea { resize: vertical; }
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.topbar-actions { display: flex; gap: 14px; align-items: center; }
+.topbar-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+
+.build-btn {
+  white-space: nowrap;
+  display: none;
+}
+
+@media (max-width: 940px) {
+  .build-btn { display: inline-flex; }
+}
 
 main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; }
 
@@ -110,6 +119,10 @@ p { color: var(--muted); line-height: 1.55; }
   transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
 }
 .primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   background: var(--ink);
   color: white;
   box-shadow: 0 16px 35px rgba(25, 23, 21, 0.22);
