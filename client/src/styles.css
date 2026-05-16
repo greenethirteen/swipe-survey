@@ -164,22 +164,56 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 .auth-card h2 { margin-bottom: 8px; }
 .auth-card > p { margin-bottom: 12px; }
 .auth-side { display: grid; gap: 18px; }
-.benefits-card { padding: 24px; }
-.benefits-card h3 { margin-bottom: 14px; }
-.benefits-card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.benefits-card {
+  padding: 24px;
+  background:
+    linear-gradient(145deg, rgba(25,23,21,0.94), rgba(25,23,21,0.88)),
+    var(--ink);
+  color: white;
+}
+.benefits-header .mini-badge {
+  color: #d8fff2;
+  background: rgba(29,187,134,0.16);
+  border-color: rgba(29,187,134,0.26);
+}
+.benefits-card h3 {
+  color: white;
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+.benefits-card p {
+  color: rgba(255,255,255,0.68);
+  margin-bottom: 18px;
+}
+.benefit-tiles {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
-.benefits-card li {
-  color: var(--muted);
-  line-height: 1.35;
-  padding-left: 14px;
-  border-left: 4px solid rgba(51,92,255,0.26);
+.benefit-tiles div {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  display: grid;
+  gap: 4px;
 }
-.benefits-card strong { color: var(--ink); }
+.benefit-tiles strong { color: white; font-size: 17px; }
+.benefit-tiles span { color: rgba(255,255,255,0.66); line-height: 1.32; }
+.signal-strip {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.signal-strip span {
+  border-radius: 999px;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 900;
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.82);
+}
 .site-footer {
   width: min(1180px, calc(100% - 32px));
   margin: 0 auto 34px;

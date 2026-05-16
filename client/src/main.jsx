@@ -168,13 +168,21 @@ function AuthView({ onAuthed }) {
           </form>
 
           <section className="benefits-card">
-            <h3>Why teams use it</h3>
-            <ul>
-              <li><strong>Higher completion.</strong> Swipe answers feel lighter than long forms.</li>
-              <li><strong>Faster setup.</strong> AI drafts a useful survey from one prompt.</li>
-              <li><strong>Easy sharing.</strong> One mobile-friendly link works anywhere.</li>
-              <li><strong>Cleaner signals.</strong> Directional answers make patterns easy to read.</li>
-            </ul>
+            <div className="benefits-header">
+              <span className="mini-badge hot">Built for quick signal</span>
+              <h3>Research without the form fatigue.</h3>
+              <p>Prompt, publish, and read directional intent without forcing people through a long questionnaire.</p>
+            </div>
+            <div className="benefit-tiles">
+              <div><strong>AI draft</strong><span>Go from idea to editable survey in seconds.</span></div>
+              <div><strong>Swipe UX</strong><span>Answers feel fast enough for mobile attention spans.</span></div>
+              <div><strong>Share link</strong><span>Send one link and watch response patterns collect.</span></div>
+            </div>
+            <div className="signal-strip">
+              <span>⬅ Friction</span>
+              <span>➡ Interest</span>
+              <span>⬆ Urgency</span>
+            </div>
           </section>
         </div>
       </main>
