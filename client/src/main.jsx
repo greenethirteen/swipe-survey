@@ -201,12 +201,16 @@ function Dashboard({ navigate, user, logout }) {
     <Shell user={user} logout={logout}>
       <main className="dashboard">
         <section className="dashboard-hero">
-          <div>
-            <div className="pill">Creator dashboard</div>
-            <h1>Make surveys feel like a game, not homework.</h1>
-            <p>Create swipe-based MCQs, share them, and watch the answer patterns come in.</p>
+          <div className="dashboard-copy">
+            <div className="pill free-pill">Free to start</div>
+            <h1>Turn boring questions into swipeable little moments.</h1>
+            <p>Build a survey with AI, share one link, and make answering feel fast on every phone.</p>
+            <div className="hero-actions">
+              <button className="primary-btn large" onClick={() => navigate('/builder')}>+ New survey</button>
+              <span className="free-note">No payment required.</span>
+            </div>
           </div>
-          <button className="primary-btn large" onClick={() => navigate('/builder')}>+ New survey</button>
+          <AnimatedSurveyDemo />
         </section>
 
         {message && <div className="toast">{message}</div>}
@@ -240,6 +244,42 @@ function Dashboard({ navigate, user, logout }) {
         </section>
       </main>
     </Shell>
+  );
+}
+
+function AnimatedSurveyDemo() {
+  const demoAnswers = [
+    { direction: 'right', label: 'Useful' },
+    { direction: 'up', label: 'Very interested' },
+    { direction: 'left', label: 'Not today' }
+  ];
+
+  return (
+    <div className="survey-demo" aria-label="Sample survey animation">
+      <div className="demo-phone">
+        <div className="demo-top">
+          <span>PulseCheck</span>
+          <strong>3 questions</strong>
+        </div>
+        <div className="demo-card">
+          <span className="mini-badge">Product feedback</span>
+          <h2>Would this help your team make faster decisions?</h2>
+        </div>
+        <div className="demo-answer-stack">
+          {demoAnswers.map((answer, index) => (
+            <div className={`demo-answer ${answer.direction}`} style={{ animationDelay: `${index * 1.2}s` }} key={answer.label}>
+              <span>{ARROWS[answer.direction]}</span>
+              <strong>{answer.label}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="demo-result">
+        <span>Live result</span>
+        <strong>87%</strong>
+        <small>would share feedback again</small>
+      </div>
+    </div>
   );
 }
 
