@@ -138,6 +138,13 @@ button:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   padding: 10px 12px;
   margin-top: 10px;
 }
+.link-btn.compact {
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  margin-top: 6px;
+  padding: 6px 10px;
+}
 .google-btn {
   width: 100%;
   display: inline-flex;

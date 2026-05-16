@@ -20,6 +20,8 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const firebaseAuth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
+const GOOGLE_PENDING_KEY = 'swipeSurveyGooglePending';
+const GOOGLE_PENDING_TIMEOUT_MS = 30000;
 
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -60,6 +62,14 @@ async function api(path, options = {}) {
   } finally {
     if (timeout) clearTimeout(timeout);
   }
+}
+
+function withTimeout(promise, timeoutMs, message) {
+  let timeout;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeout));
 }
 
 function useRoute() {
@@ -157,13 +167,22 @@ function AuthView({ onAuthed }) {
   const completingGoogleAuth = useRef(false);
 
   useEffect(() => {
+    const pendingStartedAt = Number(sessionStorage.getItem(GOOGLE_PENDING_KEY) || 0);
+    if (pendingStartedAt && Date.now() - pendingStartedAt > GOOGLE_PENDING_TIMEOUT_MS) {
+      sessionStorage.removeItem(GOOGLE_PENDING_KEY);
+    }
+
     const completeGoogleAuth = async (firebaseUser) => {
       if (!firebaseUser || completingGoogleAuth.current || getToken()) return;
       completingGoogleAuth.current = true;
       setBusy(true);
-      const idToken = await firebaseUser.getIdToken();
+      const idToken = await withTimeout(
+        firebaseUser.getIdToken(),
+        10000,
+        'Google sign-in took too long to return an account. Please try again.'
+      );
       const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken }, timeoutMs: 15000 });
-      sessionStorage.removeItem('swipeSurveyGooglePending');
+      sessionStorage.removeItem(GOOGLE_PENDING_KEY);
       onAuthed(data);
     };
 
@@ -179,25 +198,25 @@ function AuthView({ onAuthed }) {
       .then((credential) => completeGoogleAuth(credential?.user || firebaseAuth.currentUser))
       .catch((err) => {
         completingGoogleAuth.current = false;
-        sessionStorage.removeItem('swipeSurveyGooglePending');
+        sessionStorage.removeItem(GOOGLE_PENDING_KEY);
         setError(err.message);
         setBusy(false);
       });
 
-    const hadPendingGoogleAuth = sessionStorage.getItem('swipeSurveyGooglePending');
+    const hadPendingGoogleAuth = sessionStorage.getItem(GOOGLE_PENDING_KEY);
     if (hadPendingGoogleAuth) {
       setBusy(true);
       setTimeout(() => {
         if (!getToken() && !completingGoogleAuth.current) {
           if (!firebaseAuth.currentUser) {
-            sessionStorage.removeItem('swipeSurveyGooglePending');
+            sessionStorage.removeItem(GOOGLE_PENDING_KEY);
             setError('Google sign-in did not finish. Please try again.');
             setBusy(false);
             return;
           }
           completeGoogleAuth(firebaseAuth.currentUser).catch((err) => {
             completingGoogleAuth.current = false;
-            sessionStorage.removeItem('swipeSurveyGooglePending');
+            sessionStorage.removeItem(GOOGLE_PENDING_KEY);
             setError(err.message || 'Google sign-in returned without a user. Please try again.');
             setBusy(false);
           });
@@ -227,13 +246,20 @@ function AuthView({ onAuthed }) {
     setError('');
     try {
       await setPersistence(firebaseAuth, browserLocalPersistence);
-      sessionStorage.setItem('swipeSurveyGooglePending', '1');
+      sessionStorage.setItem(GOOGLE_PENDING_KEY, String(Date.now()));
       await signInWithRedirect(firebaseAuth, googleProvider);
     } catch (err) {
-      sessionStorage.removeItem('swipeSurveyGooglePending');
+      sessionStorage.removeItem(GOOGLE_PENDING_KEY);
       setError(err.message);
       setBusy(false);
     }
+  };
+
+  const resetSignIn = () => {
+    completingGoogleAuth.current = false;
+    sessionStorage.removeItem(GOOGLE_PENDING_KEY);
+    setBusy(false);
+    setError('');
   };
 
   return (
@@ -272,6 +298,11 @@ function AuthView({ onAuthed }) {
               Continue with Google
             </button>
             <button className="primary-btn" disabled={busy}>{busy ? 'One sec…' : mode === 'signup' ? 'Sign up' : 'Log in'}</button>
+            {busy && (
+              <button type="button" className="link-btn compact" onClick={resetSignIn}>
+                Reset sign-in
+              </button>
+            )}
             <button type="button" className="link-btn" onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}>
               {mode === 'signup' ? 'Already have an account? Log in' : 'Need an account? Sign up'}
             </button>
