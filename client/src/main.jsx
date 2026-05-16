@@ -490,20 +490,6 @@ function Builder({ navigate, user, logout }) {
     }
   };
 
-  const loadExample = async () => {
-    setBusy(true);
-    setError('');
-    try {
-      const data = await api('/api/surveys/example');
-      setSurvey(data.survey);
-      setSavedSurvey(null);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const saveSurvey = async () => {
     setBusy(true);
     setError('');
@@ -548,16 +534,12 @@ function Builder({ navigate, user, logout }) {
           <button className="back-btn" onClick={() => navigate('/')}>← Dashboard</button>
           <div className="pill">New survey</div>
           <h1>Create a swipe survey.</h1>
-          <p>Describe the survey you want. AI will draft the questions and answers, then you can review before sharing.</p>
 
           <label>
-            What should this survey ask about?
+            Describe your survey or write your questions here
             <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={6} />
           </label>
-          <div className="split-actions">
-            <button className="primary-btn" onClick={generate} disabled={busy}>{busy ? 'Building…' : 'Generate with AI'}</button>
-            <button onClick={loadExample} disabled={busy}>Use sample</button>
-          </div>
+          <button className="primary-btn" onClick={generate} disabled={busy}>{busy ? 'Building…' : 'Generate with AI'}</button>
           {error && <div className="error-box">{error}</div>}
         </section>
 
@@ -577,13 +559,6 @@ function Builder({ navigate, user, logout }) {
               <button onClick={() => navigate(`/stats/${savedSurvey.id}`)}>View results</button>
               <button onClick={() => navigate('/')}>Dashboard</button>
             </div>
-          </section>
-        )}
-
-        {!survey && !savedSurvey && (
-          <section className="builder-empty">
-            <h2>Your draft will appear below.</h2>
-            <p>Use one clear prompt, then review the generated wording before publishing.</p>
           </section>
         )}
 

@@ -170,7 +170,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   align-items: start;
   padding-bottom: 60px;
 }
-.hero-card, .auth-card, .benefits-card, .dashboard-hero, .empty-state, .survey-card, .builder-panel, .editor-panel, .builder-empty, .share-panel, .stats-hero, .metric-card, .stats-card, .thank-you-card {
+.hero-card, .auth-card, .benefits-card, .dashboard-hero, .empty-state, .survey-card, .builder-panel, .editor-panel, .share-panel, .stats-hero, .metric-card, .stats-card, .thank-you-card {
   border: 1px solid var(--line);
   background: var(--card);
   backdrop-filter: blur(18px);
@@ -471,28 +471,29 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 .builder-flow {
   display: grid;
   gap: 18px;
+  justify-items: center;
   padding-bottom: 80px;
 }
-.builder-panel, .editor-panel, .builder-empty, .share-panel { padding: 24px; }
+.builder-panel, .editor-panel, .share-panel { padding: 24px; }
 .creator-start {
   display: grid;
-  gap: 14px;
+  gap: 16px;
+  justify-items: center;
+  text-align: center;
+  width: min(620px, 100%);
+  margin-inline: auto;
 }
 .creator-start h1 {
-  max-width: 780px;
+  max-width: 560px;
 }
-.creator-start p {
-  max-width: 680px;
-  font-size: 18px;
+.creator-start label {
+  width: min(460px, 100%);
+  text-align: left;
+}
+.creator-start textarea {
+  min-height: 180px;
 }
 .sticky-panel { position: sticky; top: 16px; }
-.split-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.builder-empty {
-  min-height: 220px;
-  display: grid;
-  align-content: center;
-  text-align: center;
-}
 .share-panel {
   display: grid;
   gap: 16px;
@@ -787,8 +788,8 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   .answer-choice.compact { min-height: 46px; padding: 7px; font-size: 12px; }
   .answer-choice.compact span { font-size: 17px; }
   .demo-final { min-height: 350px; border-radius: 18px; }
-  .builder-panel, .editor-panel, .builder-empty, .share-panel { padding: 18px; border-radius: 20px; }
-  .split-actions, .share-link-box { grid-template-columns: 1fr; }
+  .builder-panel, .editor-panel, .share-panel { padding: 18px; border-radius: 20px; }
+  .share-link-box { grid-template-columns: 1fr; }
   .title-input { font-size: 32px; letter-spacing: -0.04em; }
   .question-editor { padding: 14px; border-radius: 18px; }
   .swipe-survey-page { padding-bottom: 24px; }
