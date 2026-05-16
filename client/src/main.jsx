@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { initializeApp } from 'firebase/app';
-import { browserLocalPersistence, getAuth, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, setPersistence, signInWithRedirect } from 'firebase/auth';
+import { browserLocalPersistence, getAuth, GoogleAuthProvider, setPersistence, signInWithPopup, signOut } from 'firebase/auth';
 import './styles.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8787' : '');
@@ -20,9 +20,7 @@ const firebaseConfig = {
 const firebaseApp = initializeApp(firebaseConfig);
 const firebaseAuth = getAuth(firebaseApp);
 const googleProvider = new GoogleAuthProvider();
-const GOOGLE_PENDING_KEY = 'swipeSurveyGooglePending';
-const GOOGLE_PENDING_TIMEOUT_MS = 30000;
-const GOOGLE_REDIRECT_SETTLE_MS = 8000;
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -108,6 +106,7 @@ function App() {
   const logout = () => {
     setToken(null);
     setUser(null);
+    signOut(firebaseAuth).catch(() => {});
     navigate('/');
   };
 
@@ -165,68 +164,10 @@ function AuthView({ onAuthed }) {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const completingGoogleAuth = useRef(false);
 
   useEffect(() => {
-    const pendingStartedAt = Number(sessionStorage.getItem(GOOGLE_PENDING_KEY) || 0);
-    if (pendingStartedAt && Date.now() - pendingStartedAt > GOOGLE_PENDING_TIMEOUT_MS) {
-      sessionStorage.removeItem(GOOGLE_PENDING_KEY);
-    }
-
-    const completeGoogleAuth = async (firebaseUser) => {
-      if (!firebaseUser || completingGoogleAuth.current || getToken()) return;
-      completingGoogleAuth.current = true;
-      setBusy(true);
-      const idToken = await withTimeout(
-        firebaseUser.getIdToken(),
-        10000,
-        'Google sign-in took too long to return an account. Please try again.'
-      );
-      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken }, timeoutMs: 15000 });
-      sessionStorage.removeItem(GOOGLE_PENDING_KEY);
-      onAuthed(data);
-    };
-
-    const unsubscribe = onAuthStateChanged(firebaseAuth, (firebaseUser) => {
-      completeGoogleAuth(firebaseUser).catch((err) => {
-        completingGoogleAuth.current = false;
-        setError(err.message);
-        setBusy(false);
-      });
-    });
-
-    getRedirectResult(firebaseAuth)
-      .then((credential) => completeGoogleAuth(credential?.user || firebaseAuth.currentUser))
-      .catch((err) => {
-        completingGoogleAuth.current = false;
-        sessionStorage.removeItem(GOOGLE_PENDING_KEY);
-        setError(err.message);
-        setBusy(false);
-      });
-
-    const hadPendingGoogleAuth = sessionStorage.getItem(GOOGLE_PENDING_KEY);
-    if (hadPendingGoogleAuth) {
-      setBusy(true);
-      setTimeout(() => {
-        if (!getToken() && !completingGoogleAuth.current) {
-          if (!firebaseAuth.currentUser) {
-            sessionStorage.removeItem(GOOGLE_PENDING_KEY);
-            setError('Google sign-in did not finish. Please try again.');
-            setBusy(false);
-            return;
-          }
-          completeGoogleAuth(firebaseAuth.currentUser).catch((err) => {
-            completingGoogleAuth.current = false;
-            sessionStorage.removeItem(GOOGLE_PENDING_KEY);
-            setError(err.message || 'Google sign-in returned without a user. Please try again.');
-            setBusy(false);
-          });
-        }
-      }, GOOGLE_REDIRECT_SETTLE_MS);
-    }
-
-    return unsubscribe;
-  }, [onAuthed]);
+    sessionStorage.removeItem('swipeSurveyGooglePending');
+  }, []);
 
   const submit = async (event) => {
     event.preventDefault();
@@ -247,18 +188,27 @@ function AuthView({ onAuthed }) {
     setError('');
     try {
       await setPersistence(firebaseAuth, browserLocalPersistence);
-      sessionStorage.setItem(GOOGLE_PENDING_KEY, String(Date.now()));
-      await signInWithRedirect(firebaseAuth, googleProvider);
+      const credential = await signInWithPopup(firebaseAuth, googleProvider);
+      const idToken = await withTimeout(
+        credential.user.getIdToken(),
+        10000,
+        'Google signed in, but the account token took too long. Please try again.'
+      );
+      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken }, timeoutMs: 15000 });
+      onAuthed(data);
     } catch (err) {
-      sessionStorage.removeItem(GOOGLE_PENDING_KEY);
-      setError(err.message);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setError('Google sign-in was closed before it finished.');
+      } else if (err.code === 'auth/popup-blocked') {
+        setError('Your browser blocked the Google sign-in popup. Allow popups for this site and try again.');
+      } else {
+        setError(err.message || 'Google sign-in failed. Please try again.');
+      }
       setBusy(false);
     }
   };
 
   const resetSignIn = () => {
-    completingGoogleAuth.current = false;
-    sessionStorage.removeItem(GOOGLE_PENDING_KEY);
     setBusy(false);
     setError('');
   };
