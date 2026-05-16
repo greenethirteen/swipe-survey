@@ -475,6 +475,7 @@ function Builder({ navigate, user, logout }) {
   const [savedSurvey, setSavedSurvey] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [copyMessage, setCopyMessage] = useState('');
 
   const generate = async () => {
     setBusy(true);
@@ -525,6 +526,8 @@ function Builder({ navigate, user, logout }) {
 
   const copyShareLink = async () => {
     await navigator.clipboard.writeText(shareLink);
+    setCopyMessage('Link copied.');
+    setTimeout(() => setCopyMessage(''), 2200);
   };
 
   return (
@@ -556,6 +559,7 @@ function Builder({ navigate, user, logout }) {
               <input value={shareLink} readOnly onFocus={(event) => event.target.select()} />
               <button className="primary-btn" onClick={copyShareLink}>Copy link</button>
             </div>
+            {copyMessage && <div className="toast share-toast">{copyMessage}</div>}
             <div className="share-actions">
               <button onClick={() => window.open(`/s/${savedSurvey.slug}`, '_blank')}>Open survey</button>
               <button onClick={() => navigate(`/stats/${savedSurvey.id}`)}>View results</button>
@@ -582,12 +586,18 @@ function Builder({ navigate, user, logout }) {
                     <span className="mini-badge">Card {questionIndex + 1}</span>
                     <button className="danger small" onClick={() => setSurvey({ ...survey, questions: survey.questions.filter((_, index) => index !== questionIndex) })}>Remove</button>
                   </div>
-                  <input value={question.title} onChange={(e) => updateQuestion(questionIndex, { title: e.target.value })} />
-                  <textarea value={question.question} onChange={(e) => updateQuestion(questionIndex, { question: e.target.value })} rows={2} />
+                  <label className="question-title-edit">
+                    Section label
+                    <input value={question.title} onChange={(e) => updateQuestion(questionIndex, { title: e.target.value })} />
+                  </label>
+                  <label className="question-text-edit">
+                    Question
+                    <textarea value={question.question} onChange={(e) => updateQuestion(questionIndex, { question: e.target.value })} rows={2} />
+                  </label>
                   <div className="option-editor-grid">
                     {question.options.map((option) => (
                       <label key={option.direction} className={`option-edit ${option.direction}`}>
-                        {ARROWS[option.direction]} {DIRECTION_WORDS[option.direction]}
+                        <span>{ARROWS[option.direction]} {DIRECTION_WORDS[option.direction]}</span>
                         <input value={option.label} onChange={(e) => updateOption(questionIndex, option.direction, e.target.value)} />
                       </label>
                     ))}
@@ -778,7 +788,7 @@ function SurveyTaker({ slug }) {
         </section>
         <div className="progress-track"><div style={{ width: `${progress}%` }} /></div>
         <SwipeCard key={question.id} question={question} onAnswer={answer} />
-        <p className="keyboard-hint">Tip: swipe the card, tap an answer, or use your keyboard arrows.</p>
+        <p className="keyboard-hint">Tip: swipe the card or use your keyboard arrows.</p>
       </main>
     </PublicShell>
   );
@@ -798,6 +808,7 @@ function PublicShell({ children }) {
 
 function SwipeCard({ question, onAnswer }) {
   const [drag, setDrag] = useState({ active: false, startX: 0, startY: 0, x: 0, y: 0 });
+  const [exitingDirection, setExitingDirection] = useState(null);
   const cardRef = useRef(null);
 
   const dominantDirection = useMemo(() => {
@@ -808,33 +819,39 @@ function SwipeCard({ question, onAnswer }) {
   }, [drag]);
 
   const pointerDown = (event) => {
+    if (exitingDirection) return;
     cardRef.current?.setPointerCapture?.(event.pointerId);
     setDrag({ active: true, startX: event.clientX, startY: event.clientY, x: 0, y: 0 });
   };
 
   const pointerMove = (event) => {
-    if (!drag.active) return;
+    if (!drag.active || exitingDirection) return;
     setDrag((current) => ({ ...current, x: event.clientX - current.startX, y: event.clientY - current.startY }));
   };
 
   const pointerUp = () => {
+    if (exitingDirection) return;
     const distance = Math.max(Math.abs(drag.x), Math.abs(drag.y));
     const direction = dominantDirection;
     setDrag({ active: false, startX: 0, startY: 0, x: 0, y: 0 });
-    if (distance > 90 && direction) onAnswer(direction);
+    if (distance > 90 && direction) {
+      setExitingDirection(direction);
+      setTimeout(() => onAnswer(direction), 420);
+    }
   };
 
   const transform = `translate(${drag.x}px, ${drag.y}px) rotate(${drag.x / 18}deg)`;
   const optionLabel = (direction) => question.options.find((item) => item.direction === direction)?.label;
+  const activeDirection = exitingDirection || dominantDirection;
 
   return (
     <section className="swipe-stage">
-      <div className={`answer-choice compass-choice up ${dominantDirection === 'up' ? 'active' : ''}`}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></div>
+      <div className={`answer-choice compass-choice up ${activeDirection === 'up' ? 'active' : ''}`}><span>{ARROWS.up}</span><strong>{optionLabel('up')}</strong></div>
       <div className="swipe-center-row">
-        <div className={`answer-choice compass-choice left ${dominantDirection === 'left' ? 'active' : ''}`}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></div>
+        <div className={`answer-choice compass-choice left ${activeDirection === 'left' ? 'active' : ''}`}><span>{ARROWS.left}</span><strong>{optionLabel('left')}</strong></div>
         <article
           ref={cardRef}
-          className={`swipe-card ${dominantDirection ? `lean-${dominantDirection}` : ''}`}
+          className={`swipe-card ${activeDirection ? `lean-${activeDirection}` : ''} ${exitingDirection ? `exit-${exitingDirection}` : ''}`}
           style={{ transform }}
           onPointerDown={pointerDown}
           onPointerMove={pointerMove}
@@ -843,11 +860,11 @@ function SwipeCard({ question, onAnswer }) {
         >
           <div className="mini-badge">{question.title}</div>
           <h2>{question.question}</h2>
-          {dominantDirection && <div className="swipe-signal">{ARROWS[dominantDirection]} {optionLabel(dominantDirection)}</div>}
+          {activeDirection && <div className="swipe-signal">{ARROWS[activeDirection]} {optionLabel(activeDirection)}</div>}
         </article>
-        <div className={`answer-choice compass-choice right ${dominantDirection === 'right' ? 'active' : ''}`}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></div>
+        <div className={`answer-choice compass-choice right ${activeDirection === 'right' ? 'active' : ''}`}><span>{ARROWS.right}</span><strong>{optionLabel('right')}</strong></div>
       </div>
-      <div className={`answer-choice compass-choice down ${dominantDirection === 'down' ? 'active' : ''}`}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></div>
+      <div className={`answer-choice compass-choice down ${activeDirection === 'down' ? 'active' : ''}`}><span>{ARROWS.down}</span><strong>{optionLabel('down')}</strong></div>
     </section>
   );
 }
