@@ -799,6 +799,7 @@ function SurveyTaker({ slug }) {
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [started, setStarted] = useState(false);
   const [questionStartedAt, setQuestionStartedAt] = useState(Date.now());
   const surveyStartedAt = useRef(Date.now());
 
@@ -811,6 +812,13 @@ function SurveyTaker({ slug }) {
       })
       .catch((err) => setError(err.message));
   }, [slug]);
+
+  const startSurvey = () => {
+    setStarted(true);
+    setQuestionStartedAt(Date.now());
+    surveyStartedAt.current = Date.now();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const submit = async (nextAnswers) => {
     setSubmitting(true);
@@ -863,7 +871,7 @@ function SurveyTaker({ slug }) {
   if (error) return <PublicShell><div className="error-box big">{error}</div></PublicShell>;
   if (!survey) return <FullPageLoader label="Opening survey…" />;
   if (done) return (
-    <PublicShell>
+    <PublicShell hideTopbar>
       <section className="thank-you-card">
         <div className="confetti">✨</div>
         <h1>Done. That was painless.</h1>
@@ -875,17 +883,24 @@ function SurveyTaker({ slug }) {
   const question = survey.questions[idx];
   const progress = Math.round(((idx + 1) / survey.questions.length) * 100);
 
-  return (
-    <PublicShell>
-      <main className="swipe-survey-page">
-        <section className="survey-intro-mini">
-          <div>
-            <div className="pill">{idx + 1} / {survey.questions.length}</div>
+  if (!started) {
+    return (
+      <PublicShell>
+        <main className="survey-start-screen">
+          <div className="survey-start-card">
+            <span className="pill">SwipeSurvey</span>
             <h1>{survey.title}</h1>
             <p>{survey.description}</p>
+            <button className="primary-btn start-survey-btn" onClick={startSurvey}>Start survey</button>
           </div>
-          <div className="progress-circle">{progress}%</div>
-        </section>
+        </main>
+      </PublicShell>
+    );
+  }
+
+  return (
+    <PublicShell hideTopbar>
+      <main className="swipe-survey-page fullscreen">
         <div className="progress-track"><div style={{ width: `${progress}%` }} /></div>
         <SwipeCard key={question.id} question={question} onAnswer={answer} />
         <p className="keyboard-hint">Tip: swipe the card or use your keyboard arrows.</p>
@@ -894,13 +909,15 @@ function SurveyTaker({ slug }) {
   );
 }
 
-function PublicShell({ children }) {
+function PublicShell({ children, hideTopbar = false }) {
   return (
-    <div className="public-shell">
-      <header className="public-topbar">
-        <div className="brand"><span className="brand-mark">S</span><span>SwipeSurvey™ <small>AI powered</small></span></div>
-        <MobileBuildButton />
-      </header>
+    <div className={`public-shell${hideTopbar ? ' hide-topbar' : ''}`}>
+      {!hideTopbar && (
+        <header className="public-topbar">
+          <div className="brand"><span className="brand-mark">S</span><span>SwipeSurvey™ <small>AI powered</small></span></div>
+          <MobileBuildButton />
+        </header>
+      )}
       {children}
     </div>
   );
