@@ -1,11 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { initializeApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import './styles.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8787' : '');
 const DIRECTIONS = ['left', 'right', 'up', 'down'];
 const ARROWS = { left: '⬅️', right: '➡️', up: '⬆️', down: '⬇️' };
 const DIRECTION_WORDS = { left: 'Swipe left', right: 'Swipe right', up: 'Swipe up', down: 'Swipe down' };
+const firebaseConfig = {
+  apiKey: 'AIzaSyAG128dkeBtVTKOIOn921EAl_Qc-ZD8i_U',
+  authDomain: 'swipesurvey-x.firebaseapp.com',
+  projectId: 'swipesurvey-x',
+  storageBucket: 'swipesurvey-x.firebasestorage.app',
+  messagingSenderId: '546223047361',
+  appId: '1:546223047361:web:11d988bb398f2bae2c4a40',
+  measurementId: 'G-F3PCLF65G2'
+};
+const firebaseApp = initializeApp(firebaseConfig);
+const firebaseAuth = getAuth(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
 
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
@@ -145,6 +159,21 @@ function AuthView({ onAuthed }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      const credential = await signInWithPopup(firebaseAuth, googleProvider);
+      const idToken = await credential.user.getIdToken();
+      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
+      onAuthed(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <Shell compact>
       <main className="auth-grid">
@@ -176,6 +205,10 @@ function AuthView({ onAuthed }) {
               <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 6 characters" required />
             </label>
             {error && <div className="error-box">{error}</div>}
+            <button type="button" className="google-btn" onClick={signInWithGoogle} disabled={busy}>
+              <span>G</span>
+              Continue with Google
+            </button>
             <button className="primary-btn" disabled={busy}>{busy ? 'One sec…' : mode === 'signup' ? 'Sign up' : 'Log in'}</button>
             <button type="button" className="link-btn" onClick={() => setMode(mode === 'signup' ? 'login' : 'signup')}>
               {mode === 'signup' ? 'Already have an account? Log in' : 'Need an account? Sign up'}

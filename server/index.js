@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import admin from 'firebase-admin';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,6 +16,9 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
 const APP_SECRET = process.env.APP_SECRET || 'dev-secret-change-me';
 const DB_FILE = process.env.DB_FILE || path.join(__dirname, 'data', 'db.json');
 const CLIENT_DIST = path.resolve(__dirname, '../client/dist');
+const firebaseProjectId = process.env.FIREBASE_PROJECT_ID;
+const firebaseClientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+const firebasePrivateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
 
 const DIRECTIONS = ['left', 'right', 'up', 'down'];
 const DIRECTION_LABELS = {
@@ -28,6 +32,16 @@ const app = express();
 app.use(helmet({ contentSecurityPolicy: false }));
 app.use(cors({ origin: CLIENT_ORIGIN === '*' ? true : CLIENT_ORIGIN, credentials: true }));
 app.use(express.json({ limit: '2mb' }));
+
+if (firebaseProjectId && firebaseClientEmail && firebasePrivateKey && !admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: firebaseProjectId,
+      clientEmail: firebaseClientEmail,
+      privateKey: firebasePrivateKey
+    })
+  });
+}
 
 function ensureDb() {
   const folder = path.dirname(DB_FILE);
@@ -96,6 +110,34 @@ function verifyPassword(password, stored) {
 
 function publicUser(user) {
   return { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt };
+}
+
+function upsertFirebaseUser(decodedToken) {
+  const email = cleanText(decodedToken.email).toLowerCase();
+  if (!email || !decodedToken.uid) throw new Error('Firebase token did not include a verified user.');
+
+  const db = readDb();
+  let user = db.users.find((item) => item.firebaseUid === decodedToken.uid);
+  if (!user) user = db.users.find((item) => item.email === email);
+
+  if (user) {
+    user.firebaseUid = decodedToken.uid;
+    user.name = user.name || cleanText(decodedToken.name, 'Survey Creator');
+    user.email = user.email || email;
+    user.updatedAt = new Date().toISOString();
+  } else {
+    user = {
+      id: id(),
+      firebaseUid: decodedToken.uid,
+      name: cleanText(decodedToken.name, 'Survey Creator'),
+      email,
+      createdAt: new Date().toISOString()
+    };
+    db.users.push(user);
+  }
+
+  writeDb(db);
+  return user;
 }
 
 function getBearerToken(req) {
@@ -519,8 +561,21 @@ app.post('/api/auth/login', (req, res) => {
   const password = String(req.body.password || '');
   const db = readDb();
   const user = db.users.find((item) => item.email === email);
-  if (!user || !verifyPassword(password, user.passwordHash)) return res.status(401).json({ error: 'Invalid email or password.' });
+  if (!user || !user.passwordHash || !verifyPassword(password, user.passwordHash)) return res.status(401).json({ error: 'Invalid email or password.' });
   res.json({ user: publicUser(user), token: createToken(user.id) });
+});
+
+app.post('/api/auth/firebase', async (req, res, next) => {
+  try {
+    if (!admin.apps.length) return res.status(500).json({ error: 'Firebase Admin is not configured on the server.' });
+    const idToken = String(req.body.idToken || '');
+    if (!idToken) return res.status(400).json({ error: 'Missing Firebase ID token.' });
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const user = upsertFirebaseUser(decodedToken);
+    res.json({ user: publicUser(user), token: createToken(user.id) });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get('/api/auth/me', requireAuth, (req, res) => {

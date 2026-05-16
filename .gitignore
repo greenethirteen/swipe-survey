@@ -6,3 +6,4 @@ client/dist
 server/data/db.json
 server/data/db.json.tmp
 .DS_Store
+*firebase-adminsdk*.json
