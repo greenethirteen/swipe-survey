@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { initializeApp } from 'firebase/app';
-import { getAuth, getRedirectResult, GoogleAuthProvider, signInWithPopup, signInWithRedirect } from 'firebase/auth';
+import { getAuth, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect } from 'firebase/auth';
 import './styles.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8787' : '');
@@ -144,18 +144,35 @@ function AuthView({ onAuthed }) {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const completingGoogleAuth = useRef(false);
 
   useEffect(() => {
+    const completeGoogleAuth = async (firebaseUser) => {
+      if (!firebaseUser || completingGoogleAuth.current || getToken()) return;
+      completingGoogleAuth.current = true;
+      setBusy(true);
+      const idToken = await firebaseUser.getIdToken();
+      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
+      onAuthed(data);
+    };
+
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (firebaseUser) => {
+      completeGoogleAuth(firebaseUser).catch((err) => {
+        completingGoogleAuth.current = false;
+        setError(err.message);
+        setBusy(false);
+      });
+    });
+
     getRedirectResult(firebaseAuth)
-      .then(async (credential) => {
-        if (!credential?.user) return;
-        setBusy(true);
-        const idToken = await credential.user.getIdToken();
-        const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
-        onAuthed(data);
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setBusy(false));
+      .then((credential) => completeGoogleAuth(credential?.user))
+      .catch((err) => {
+        completingGoogleAuth.current = false;
+        setError(err.message);
+        setBusy(false);
+      });
+
+    return unsubscribe;
   }, [onAuthed]);
 
   const submit = async (event) => {
@@ -176,22 +193,9 @@ function AuthView({ onAuthed }) {
     setBusy(true);
     setError('');
     try {
-      const useRedirect = window.matchMedia('(max-width: 940px)').matches;
-      if (useRedirect) {
-        await signInWithRedirect(firebaseAuth, googleProvider);
-        return;
-      }
-      const credential = await signInWithPopup(firebaseAuth, googleProvider);
-      const idToken = await credential.user.getIdToken();
-      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
-      onAuthed(data);
+      await signInWithRedirect(firebaseAuth, googleProvider);
     } catch (err) {
-      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/popup-blocked') {
-        await signInWithRedirect(firebaseAuth, googleProvider);
-        return;
-      }
       setError(err.message);
-    } finally {
       setBusy(false);
     }
   };
