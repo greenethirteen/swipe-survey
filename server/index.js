@@ -18,7 +18,7 @@ const DB_FILE = process.env.DB_FILE || path.join(__dirname, 'data', 'db.json');
 const CLIENT_DIST = path.resolve(__dirname, '../client/dist');
 const firebaseProjectId = process.env.FIREBASE_PROJECT_ID;
 const firebaseClientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const firebasePrivateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+const firebasePrivateKey = normalizeFirebasePrivateKey(process.env.FIREBASE_PRIVATE_KEY_BASE64 || process.env.FIREBASE_PRIVATE_KEY);
 
 const DIRECTIONS = ['left', 'right', 'up', 'down'];
 const DIRECTION_LABELS = {
@@ -41,6 +41,18 @@ if (firebaseProjectId && firebaseClientEmail && firebasePrivateKey && !admin.app
       privateKey: firebasePrivateKey
     })
   });
+}
+
+function normalizeFirebasePrivateKey(value) {
+  if (!value) return '';
+  let key = String(value).trim();
+  if (process.env.FIREBASE_PRIVATE_KEY_BASE64 && String(value) === process.env.FIREBASE_PRIVATE_KEY_BASE64) {
+    key = Buffer.from(key, 'base64').toString('utf8').trim();
+  }
+  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+    key = key.slice(1, -1);
+  }
+  return key.replace(/\\n/g, '\n').trim();
 }
 
 function ensureDb() {
