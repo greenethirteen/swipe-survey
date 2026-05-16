@@ -95,6 +95,7 @@ p { color: var(--muted); line-height: 1.55; }
 }
 .mini-badge { padding: 6px 10px; margin: 0; font-size: 11px; }
 .mini-badge.hot { color: #9a3700; background: rgba(255,122,26,0.12); }
+.free-pill { margin-bottom: 4px; }
 .muted { color: var(--muted); }
 .hide-mobile { display: inline; }
 
@@ -157,9 +158,11 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   box-shadow: var(--shadow);
 }
 .hero-card { padding: clamp(28px, 5vw, 54px); display: grid; gap: 12px; }
-.hero-card h1 { margin-bottom: 0; }
+.hero-card h1 { margin-bottom: 0; line-height: 0.84; }
 .hero-card p { margin-bottom: 2px; }
 .auth-card { padding: 28px; }
+.auth-card h2 { margin-bottom: 8px; }
+.auth-card > p { margin-bottom: 12px; }
 
 .error-box, .toast {
   border-radius: 18px;
@@ -671,7 +674,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   .hero-card h1 span { display: block; }
   .hero-subhead span { display: block; }
   p { line-height: 1.28; }
-  .pill { margin-bottom: 8px; }
+  .pill { margin-bottom: 6px; }
   .survey-grid, .option-editor-grid, .metric-grid, .direction-summary { grid-template-columns: 1fr; }
   .topbar { align-items: flex-start; }
   .auth-grid { gap: 12px; padding-bottom: 24px; }
