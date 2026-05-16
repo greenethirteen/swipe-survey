@@ -531,8 +531,10 @@ function Builder({ navigate, user, logout }) {
     <Shell user={user} logout={logout}>
       <main className="builder-flow">
         <section className="builder-panel creator-start">
-          <button className="back-btn" onClick={() => navigate('/')}>← Dashboard</button>
-          <div className="pill">New survey</div>
+          <div className="builder-start-top">
+            <button className="back-btn" onClick={() => navigate('/')}>← Dashboard</button>
+            <div className="pill">New survey</div>
+          </div>
           <h1>Create a swipe survey.</h1>
 
           <label>
