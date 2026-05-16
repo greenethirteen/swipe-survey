@@ -215,7 +215,12 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   box-shadow: 0 22px 56px rgba(25,23,21,0.14);
   display: grid;
   gap: 12px;
+  transition: background 0.35s ease, box-shadow 0.35s ease;
 }
+.demo-shell.theme-0 { background: linear-gradient(155deg, #f7fffb, #f0fff7 45%, #fff4e8); }
+.demo-shell.theme-1 { background: linear-gradient(155deg, #f7faff, #eef4ff 45%, #fff6ec); }
+.demo-shell.theme-2 { background: linear-gradient(155deg, #fff7fb, #fff0f7 45%, #f1fff8); }
+.demo-shell.theme-result { background: linear-gradient(155deg, #f2f5ff, #eef3ff 45%, #f7fff8); }
 .demo-top {
   display: flex;
   justify-content: space-between;
@@ -223,6 +228,13 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   color: var(--muted);
   font-weight: 850;
   font-size: 13px;
+}
+.demo-progress {
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: var(--ink);
+  color: white;
+  box-shadow: 0 12px 28px rgba(25,23,21,0.16);
 }
 .demo-compass {
   display: grid;
@@ -250,6 +262,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   position: relative;
   z-index: 2;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  animation: demo-question-enter 0.28s ease both;
 }
 .demo-question-card:active { cursor: grabbing; }
 .demo-question-card .mini-badge {
@@ -262,6 +275,10 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   line-height: 1.05;
   margin-bottom: 0;
   letter-spacing: -0.015em;
+}
+@keyframes demo-question-enter {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 .demo-hint {
   text-align: center;
@@ -535,6 +552,21 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   padding: 10px;
   border-radius: 16px;
   font-size: 13px;
+}
+.demo-compass-row .answer-choice.compact,
+.swipe-center-row .answer-choice {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  align-content: center;
+  text-align: center;
+}
+.demo-compass-row .answer-choice.compact span,
+.swipe-center-row .answer-choice span {
+  font-size: 28px;
+}
+.demo-compass-row .answer-choice.compact strong,
+.swipe-center-row .answer-choice strong {
+  max-width: 100%;
 }
 .answer-choice.compass-choice {
   width: min(360px, 100%);

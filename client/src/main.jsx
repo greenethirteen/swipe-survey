@@ -279,20 +279,21 @@ function HomeSurveyDemo() {
   ];
   const [answers, setAnswers] = useState([]);
   const current = demoQuestions[answers.length];
+  const questionIndex = answers.length;
   const done = answers.length === demoQuestions.length;
   const positive = answers.filter((answer) => answer === 'right' || answer === 'up').length;
   const score = Math.round((positive / demoQuestions.length) * 100);
 
   return (
     <div className="survey-demo" aria-label="Try a sample swipe survey">
-      <div className="demo-shell">
+      <div className={`demo-shell theme-${done ? 'result' : questionIndex}`}>
         <div className="demo-top">
           <span>Try the demo</span>
-          <strong>{done ? 'Result' : `${answers.length + 1} / ${demoQuestions.length}`}</strong>
+          <strong className="demo-progress">{done ? 'Result' : `${answers.length + 1} / ${demoQuestions.length}`}</strong>
         </div>
         {!done ? (
           <>
-            <DemoCompassCard question={current} onAnswer={(direction) => setAnswers([...answers, direction])} />
+            <DemoCompassCard key={current.id} question={current} onAnswer={(direction) => setAnswers([...answers, direction])} />
         <p className="demo-hint">Swipe the black card toward an answer.</p>
           </>
         ) : (
