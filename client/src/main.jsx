@@ -258,51 +258,10 @@ function blankQuestion(index) {
   };
 }
 
-function parsePastedSurvey(text) {
-  const blocks = text.split(/\n\s*\n+/).map((block) => block.trim()).filter(Boolean);
-  const questions = [];
-
-  blocks.forEach((block, blockIndex) => {
-    const lines = block.split('\n').map((line) => line.trim()).filter(Boolean);
-    const qLineIndex = lines.findIndex((line) => /^q\s*:/i.test(line));
-    if (qLineIndex === -1) return;
-
-    const titleLine = lines.slice(0, qLineIndex).join(' ').replace(/^\d+[.)]\s*/, '').trim() || `Question ${blockIndex + 1}`;
-    const question = lines[qLineIndex].replace(/^q\s*:\s*/i, '').trim();
-    const directionLabels = { left: '', right: '', up: '', down: '' };
-
-    lines.slice(qLineIndex + 1).forEach((line) => {
-      if (line.includes('⬅️') || line.includes('←')) directionLabels.left = line.replace(/^[*\-\s]*[⬅️←]+\s*/, '').trim();
-      if (line.includes('➡️') || line.includes('→')) directionLabels.right = line.replace(/^[*\-\s]*[➡️→]+\s*/, '').trim();
-      if (line.includes('⬆️') || line.includes('↑')) directionLabels.up = line.replace(/^[*\-\s]*[⬆️↑]+\s*/, '').trim();
-      if (line.includes('⬇️') || line.includes('↓')) directionLabels.down = line.replace(/^[*\-\s]*[⬇️↓]+\s*/, '').trim();
-    });
-
-    questions.push({
-      id: makeId(),
-      title: titleLine,
-      question,
-      insight: '',
-      options: DIRECTIONS.map((direction) => ({
-        id: makeId(),
-        direction,
-        label: directionLabels[direction] || (direction === 'left' ? 'No' : direction === 'right' ? 'Yes' : direction === 'up' ? 'Strongly yes' : 'Not sure'),
-        value: directionLabels[direction] || direction
-      }))
-    });
-  });
-
-  return {
-    title: 'Pasted swipe survey',
-    description: 'Answer each question by swiping in one of four directions.',
-    questions: questions.length ? questions : [blankQuestion(1)]
-  };
-}
-
 function Builder({ navigate, user, logout }) {
   const [prompt, setPrompt] = useState('Build a 10-question survey for an NFC medical ID startup. Focus on emergency experiences, hospital confusion, stress, trust, usefulness, product acceptance, and urgency.');
-  const [paste, setPaste] = useState('');
   const [survey, setSurvey] = useState(null);
+  const [savedSurvey, setSavedSurvey] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -312,6 +271,7 @@ function Builder({ navigate, user, logout }) {
     try {
       const data = await api('/api/ai/survey', { method: 'POST', body: { prompt } });
       setSurvey(data.survey);
+      setSavedSurvey(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -325,6 +285,7 @@ function Builder({ navigate, user, logout }) {
     try {
       const data = await api('/api/surveys/example');
       setSurvey(data.survey);
+      setSavedSurvey(null);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -337,7 +298,8 @@ function Builder({ navigate, user, logout }) {
     setError('');
     try {
       const data = await api('/api/surveys', { method: 'POST', body: { survey } });
-      navigate(`/stats/${data.survey.id}`);
+      setSavedSurvey(data.survey);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -362,55 +324,68 @@ function Builder({ navigate, user, logout }) {
     }));
   };
 
+  const shareLink = savedSurvey ? `${window.location.origin}/s/${savedSurvey.slug}` : '';
+
+  const copyShareLink = async () => {
+    await navigator.clipboard.writeText(shareLink);
+  };
+
   return (
     <Shell user={user} logout={logout}>
-      <main className="builder-layout">
-        <section className="builder-panel sticky-panel">
+      <main className="builder-flow">
+        <section className="builder-panel creator-start">
           <button className="back-btn" onClick={() => navigate('/')}>← Dashboard</button>
           <div className="pill">New survey</div>
-          <h1>Build with AI or paste your own.</h1>
-          <p>Every question gets four directions: left, right, up, and down.</p>
+          <h1>Create a swipe survey.</h1>
+          <p>Describe the survey you want. AI will draft the questions and answers, then you can review before sharing.</p>
 
           <label>
-            AI prompt
+            What should this survey ask about?
             <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={6} />
           </label>
           <div className="split-actions">
             <button className="primary-btn" onClick={generate} disabled={busy}>{busy ? 'Building…' : 'Generate with AI'}</button>
             <button onClick={loadExample} disabled={busy}>Use sample</button>
           </div>
-
-          <label>
-            Paste a survey script
-            <textarea value={paste} onChange={(e) => setPaste(e.target.value)} rows={8} placeholder={'1. Emergency Experience\nQ: Have you ever struggled...?\n* ⬅️ Never\n* ➡️ Yes\n* ⬆️ Yes, stressful\n* ⬇️ Not sure'} />
-          </label>
-          <button onClick={() => setSurvey(parsePastedSurvey(paste))}>Parse pasted text</button>
           {error && <div className="error-box">{error}</div>}
         </section>
 
-        <section className="editor-panel">
-          {!survey && (
-            <div className="preview-placeholder">
-              <div className="phone-mock">
-                <span className="mock-arrow top">⬆️</span>
-                <span className="mock-arrow left">⬅️</span>
-                <span className="mock-card">Your survey appears here</span>
-                <span className="mock-arrow right">➡️</span>
-                <span className="mock-arrow bottom">⬇️</span>
-              </div>
-              <h2>Ready when you are.</h2>
-              <p>Generate, paste, or load the sample to start editing.</p>
+        {savedSurvey && (
+          <section className="share-panel">
+            <div>
+              <div className="pill">Ready to share</div>
+              <h2>Your survey link is live.</h2>
+              <p>Send this link to respondents.</p>
             </div>
-          )}
+            <div className="share-link-box">
+              <input value={shareLink} readOnly onFocus={(event) => event.target.select()} />
+              <button className="primary-btn" onClick={copyShareLink}>Copy link</button>
+            </div>
+            <div className="share-actions">
+              <button onClick={() => window.open(`/s/${savedSurvey.slug}`, '_blank')}>Open survey</button>
+              <button onClick={() => navigate(`/stats/${savedSurvey.id}`)}>View results</button>
+              <button onClick={() => navigate('/')}>Dashboard</button>
+            </div>
+          </section>
+        )}
 
-          {survey && (
+        {!survey && !savedSurvey && (
+          <section className="builder-empty">
+            <h2>Your draft will appear below.</h2>
+            <p>Use one clear prompt, then review the generated wording before publishing.</p>
+          </section>
+        )}
+
+        {survey && (
+          <section className="editor-panel">
             <div className="survey-editor">
               <div className="editor-header">
                 <div>
+                  <div className="pill">Review draft</div>
                   <input className="title-input" value={survey.title} onChange={(e) => setSurvey({ ...survey, title: e.target.value })} />
                   <textarea className="description-input" value={survey.description} onChange={(e) => setSurvey({ ...survey, description: e.target.value })} rows={2} />
                 </div>
-                <button className="primary-btn" onClick={saveSurvey} disabled={busy}>{busy ? 'Saving…' : 'Save & view stats'}</button>
+                <button className="primary-btn" onClick={saveSurvey} disabled={busy}>{busy ? 'Publishing…' : 'Publish & get link'}</button>
               </div>
 
               {survey.questions.map((question, questionIndex) => (
@@ -434,8 +409,8 @@ function Builder({ navigate, user, logout }) {
 
               <button onClick={() => setSurvey({ ...survey, questions: [...survey.questions, blankQuestion(survey.questions.length + 1)] })}>+ Add question</button>
             </div>
-          )}
-        </section>
+          </section>
+        )}
       </main>
     </Shell>
   );
@@ -485,16 +460,6 @@ function StatsView({ surveyId, navigate, logout }) {
               <Metric label="Completed" value={stats.completedResponses} />
               <Metric label="Avg. seconds" value={stats.averageTimeSeconds} />
               <Metric label="Questions" value={stats.questions.length} />
-            </section>
-
-            <section className="direction-summary">
-              {stats.directionCounts.map((item) => (
-                <div className="direction-tile" key={item.direction}>
-                  <span>{ARROWS[item.direction]}</span>
-                  <strong>{item.count}</strong>
-                  <small>{item.label} answers</small>
-                </div>
-              ))}
             </section>
 
             <section className="question-stats-list">
@@ -674,9 +639,6 @@ function SwipeCard({ question, onAnswer }) {
 
   return (
     <section className="swipe-stage">
-      <button className="answer-chip chip-up" onClick={() => onAnswer('up')}>{ARROWS.up} {question.options.find((item) => item.direction === 'up')?.label}</button>
-      <button className="answer-chip chip-left" onClick={() => onAnswer('left')}>{ARROWS.left} {question.options.find((item) => item.direction === 'left')?.label}</button>
-
       <article
         ref={cardRef}
         className={`swipe-card ${dominantDirection ? `lean-${dominantDirection}` : ''}`}
@@ -691,8 +653,14 @@ function SwipeCard({ question, onAnswer }) {
         {dominantDirection && <div className="swipe-signal">{ARROWS[dominantDirection]} {question.options.find((item) => item.direction === dominantDirection)?.label}</div>}
       </article>
 
-      <button className="answer-chip chip-right" onClick={() => onAnswer('right')}>{ARROWS.right} {question.options.find((item) => item.direction === 'right')?.label}</button>
-      <button className="answer-chip chip-down" onClick={() => onAnswer('down')}>{ARROWS.down} {question.options.find((item) => item.direction === 'down')?.label}</button>
+      <div className="answer-grid" aria-label="Answer choices">
+        {DIRECTIONS.map((direction) => (
+          <button className={`answer-choice ${direction}`} key={direction} onClick={() => onAnswer(direction)}>
+            <span>{ARROWS[direction]}</span>
+            <strong>{question.options.find((item) => item.direction === direction)?.label}</strong>
+          </button>
+        ))}
+      </div>
     </section>
   );
 }
