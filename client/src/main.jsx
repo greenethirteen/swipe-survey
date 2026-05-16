@@ -135,9 +135,9 @@ function AuthView({ onAuthed }) {
       <main className="auth-grid">
         <section className="hero-card">
           <div className="pill free-pill">Free to start</div>
-          <h1>Turn boring questions into swipeable little moments.</h1>
+          <h1>Swipeable surveys in minutes.</h1>
           <p>
-            Build a survey manually or let AI create it from a prompt. Share a link. Let people answer by swiping left, right, up, or down.
+            Build with AI, share one link, and collect fast mobile responses.
           </p>
           <HomeSurveyDemo />
         </section>

@@ -140,7 +140,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
-.hero-card { padding: clamp(28px, 6vw, 64px); display: grid; gap: 20px; }
+.hero-card { padding: clamp(28px, 5vw, 54px); display: grid; gap: 18px; }
 .auth-card { padding: 28px; }
 
 .error-box, .toast {
@@ -231,7 +231,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
   display: grid;
   gap: 12px;
-  min-height: 640px;
+  min-height: 560px;
   align-content: start;
   transition: background 0.35s ease, box-shadow 0.35s ease;
 }
@@ -267,7 +267,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   align-items: stretch;
 }
 .demo-question-card {
-  min-height: 292px;
+  min-height: 250px;
   border-radius: 24px;
   padding: 16px;
   background: var(--ink);
@@ -305,7 +305,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   margin-bottom: 0;
 }
 .demo-final {
-  min-height: 540px;
+  min-height: 460px;
   border-radius: 24px;
   padding: 24px;
   background: #335cff;
@@ -633,27 +633,29 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 @media (max-width: 640px) {
   .hide-mobile { display: none; }
   main, .topbar, .public-topbar { width: min(100% - 20px, 1180px); }
-  h1 { font-size: 42px; letter-spacing: -0.02em; }
+  h1 { font-size: 38px; line-height: 1.02; letter-spacing: -0.02em; margin-bottom: 10px; }
+  p { line-height: 1.42; }
+  .pill { margin-bottom: 8px; }
   .survey-grid, .option-editor-grid, .metric-grid, .direction-summary { grid-template-columns: 1fr; }
   .topbar { align-items: flex-start; }
-  .auth-grid { gap: 14px; padding-bottom: 30px; }
-  .hero-card, .auth-card { padding: 22px; border-radius: 20px; }
+  .auth-grid { gap: 12px; padding-bottom: 24px; }
+  .hero-card, .auth-card { padding: 18px; border-radius: 20px; gap: 12px; }
   .dashboard-hero { padding: 22px; }
   .hero-actions { align-items: stretch; }
   .hero-actions .primary-btn { width: 100%; }
-  .demo-phone-frame { width: 100%; border-radius: 32px; padding: 12px 10px 12px; }
-  .demo-speaker { margin-bottom: 9px; }
-  .demo-shell { padding: 12px; border-radius: 20px; min-height: 570px; }
+  .demo-phone-frame { width: 100%; border-radius: 30px; padding: 10px 9px 10px; }
+  .demo-speaker { margin-bottom: 8px; }
+  .demo-shell { padding: 10px; border-radius: 20px; min-height: 455px; gap: 8px; }
   .demo-compass-row {
     grid-template-columns: minmax(74px, 0.55fr) minmax(0, 1.5fr) minmax(74px, 0.55fr);
     gap: 7px;
   }
   .demo-compass > .answer-choice.compact { width: 50%; }
-  .demo-question-card { min-height: 250px; padding: 14px; border-radius: 18px; }
-  .demo-question-card h2 { font-size: 22px; }
-  .answer-choice.compact { min-height: 50px; padding: 8px; font-size: 12px; }
+  .demo-question-card { min-height: 185px; padding: 14px; border-radius: 18px; }
+  .demo-question-card h2 { font-size: 21px; }
+  .answer-choice.compact { min-height: 46px; padding: 7px; font-size: 12px; }
   .answer-choice.compact span { font-size: 17px; }
-  .demo-final { min-height: 470px; border-radius: 18px; }
+  .demo-final { min-height: 350px; border-radius: 18px; }
   .builder-panel, .editor-panel, .builder-empty, .share-panel { padding: 18px; border-radius: 20px; }
   .split-actions, .share-link-box { grid-template-columns: 1fr; }
   .title-input { font-size: 32px; letter-spacing: -0.04em; }
