@@ -39,17 +39,27 @@ async function api(path, options = {}) {
   const headers = { ...(options.headers || {}) };
   if (!(options.body instanceof FormData)) headers['Content-Type'] = 'application/json';
   if (token) headers.Authorization = `Bearer ${token}`;
+  const controller = options.timeoutMs ? new AbortController() : null;
+  const timeout = controller ? setTimeout(() => controller.abort(), options.timeoutMs) : null;
 
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers,
-    body: options.body && !(options.body instanceof FormData) ? JSON.stringify(options.body) : options.body
-  });
+  try {
+    const response = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      signal: options.signal || controller?.signal,
+      headers,
+      body: options.body && !(options.body instanceof FormData) ? JSON.stringify(options.body) : options.body
+    });
 
-  const isJson = response.headers.get('content-type')?.includes('application/json');
-  const data = isJson ? await response.json() : await response.text();
-  if (!response.ok) throw new Error(data?.error || data || 'Request failed');
-  return data;
+    const isJson = response.headers.get('content-type')?.includes('application/json');
+    const data = isJson ? await response.json() : await response.text();
+    if (!response.ok) throw new Error(data?.error || data || 'Request failed');
+    return data;
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('The server took too long to finish sign-in. Please try again.');
+    throw error;
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
 }
 
 function useRoute() {
@@ -152,7 +162,7 @@ function AuthView({ onAuthed }) {
       completingGoogleAuth.current = true;
       setBusy(true);
       const idToken = await firebaseUser.getIdToken();
-      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
+      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken }, timeoutMs: 15000 });
       sessionStorage.removeItem('swipeSurveyGooglePending');
       onAuthed(data);
     };
@@ -179,6 +189,12 @@ function AuthView({ onAuthed }) {
       setBusy(true);
       setTimeout(() => {
         if (!getToken() && !completingGoogleAuth.current) {
+          if (!firebaseAuth.currentUser) {
+            sessionStorage.removeItem('swipeSurveyGooglePending');
+            setError('Google sign-in did not finish. Please try again.');
+            setBusy(false);
+            return;
+          }
           completeGoogleAuth(firebaseAuth.currentUser).catch((err) => {
             completingGoogleAuth.current = false;
             sessionStorage.removeItem('swipeSurveyGooglePending');
