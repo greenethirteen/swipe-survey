@@ -86,8 +86,8 @@ function Shell({ children, user, logout, compact = false }) {
     <div className="app-shell">
       <header className="topbar">
         <div className="brand" onClick={() => (window.location.href = '/')}>
-          <span className="brand-mark">↕</span>
-          <span>SwipeSurvey AI</span>
+          <span className="brand-mark">S</span>
+          <span>SwipeSurvey™ <small>AI powered</small></span>
         </div>
         {!compact && (
           <div className="topbar-actions">
@@ -135,7 +135,7 @@ function AuthView({ onAuthed }) {
       <main className="auth-grid">
         <section className="hero-card">
           <div className="pill free-pill">Free to start</div>
-          <h1>Swipeable surveys in minutes.</h1>
+          <h1><span>Swipeable</span> <span>surveys</span> <span>in minutes.</span></h1>
           <p>
             Build with AI, share one link, and collect fast mobile responses.
           </p>
@@ -719,7 +719,7 @@ function PublicShell({ children }) {
   return (
     <div className="public-shell">
       <header className="public-topbar">
-        <div className="brand"><span className="brand-mark">↕</span><span>SwipeSurvey AI</span></div>
+        <div className="brand"><span className="brand-mark">S</span><span>SwipeSurvey™ <small>AI powered</small></span></div>
       </header>
       {children}
     </div>
