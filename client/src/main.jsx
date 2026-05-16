@@ -134,6 +134,7 @@ function AuthView({ onAuthed }) {
     <Shell compact>
       <main className="auth-grid">
         <section className="hero-card">
+          <div className="pill free-pill">Free to start</div>
           <h1><span>Swipeable</span> <span>surveys</span> <span>in minutes.</span></h1>
           <p className="hero-subhead">
             <span>Build with AI, share one link,</span> <span>and collect fast mobile responses.</span>
@@ -143,7 +144,6 @@ function AuthView({ onAuthed }) {
 
         <div className="auth-side">
           <form className="auth-card" onSubmit={submit}>
-            <div className="pill free-pill">Free to start</div>
             <h2>{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
             <p className="muted">Your dashboard stores surveys and results locally through the Node server.</p>
             {mode === 'signup' && (
