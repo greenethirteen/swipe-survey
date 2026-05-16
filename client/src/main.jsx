@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { initializeApp } from 'firebase/app';
-import { getAuth, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signInWithRedirect } from 'firebase/auth';
+import { browserLocalPersistence, getAuth, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, setPersistence, signInWithRedirect } from 'firebase/auth';
 import './styles.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8787' : '');
@@ -153,6 +153,7 @@ function AuthView({ onAuthed }) {
       setBusy(true);
       const idToken = await firebaseUser.getIdToken();
       const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken } });
+      sessionStorage.removeItem('swipeSurveyGooglePending');
       onAuthed(data);
     };
 
@@ -165,12 +166,28 @@ function AuthView({ onAuthed }) {
     });
 
     getRedirectResult(firebaseAuth)
-      .then((credential) => completeGoogleAuth(credential?.user))
+      .then((credential) => completeGoogleAuth(credential?.user || firebaseAuth.currentUser))
       .catch((err) => {
         completingGoogleAuth.current = false;
+        sessionStorage.removeItem('swipeSurveyGooglePending');
         setError(err.message);
         setBusy(false);
       });
+
+    const hadPendingGoogleAuth = sessionStorage.getItem('swipeSurveyGooglePending');
+    if (hadPendingGoogleAuth) {
+      setBusy(true);
+      setTimeout(() => {
+        if (!getToken() && !completingGoogleAuth.current) {
+          completeGoogleAuth(firebaseAuth.currentUser).catch((err) => {
+            completingGoogleAuth.current = false;
+            sessionStorage.removeItem('swipeSurveyGooglePending');
+            setError(err.message || 'Google sign-in returned without a user. Please try again.');
+            setBusy(false);
+          });
+        }
+      }, 700);
+    }
 
     return unsubscribe;
   }, [onAuthed]);
@@ -193,8 +210,11 @@ function AuthView({ onAuthed }) {
     setBusy(true);
     setError('');
     try {
+      await setPersistence(firebaseAuth, browserLocalPersistence);
+      sessionStorage.setItem('swipeSurveyGooglePending', '1');
       await signInWithRedirect(firebaseAuth, googleProvider);
     } catch (err) {
+      sessionStorage.removeItem('swipeSurveyGooglePending');
       setError(err.message);
       setBusy(false);
     }
