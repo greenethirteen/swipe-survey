@@ -293,6 +293,43 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   gap: 24px;
   margin-bottom: 26px;
 }
+
+/* Dashboard "New survey" — colorful, animated CTA */
+.dashboard-hero .primary-btn.large {
+  background: linear-gradient(90deg, #ff7a1a, #ff4d8d, #335cff);
+  background-size: 300% 100%;
+  color: white;
+  box-shadow: 0 20px 50px rgba(51,92,255,0.12), 0 8px 20px rgba(255,77,141,0.08);
+  position: relative;
+  overflow: visible;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  animation: gradient-slide 6s linear infinite, float 3.6s ease-in-out infinite;
+}
+.dashboard-hero .primary-btn.large::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 22px;
+  background: radial-gradient(closest-side, rgba(51,92,255,0.12), transparent 40%);
+  filter: blur(12px);
+  opacity: 0.9;
+  z-index: -1;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+.dashboard-hero .primary-btn.large:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 30px 80px rgba(51,92,255,0.16), 0 12px 30px rgba(255,77,141,0.12);
+}
+
+@keyframes gradient-slide {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
 .dashboard-copy { max-width: 670px; }
 .dashboard-copy p, .stats-hero p { font-size: 18px; max-width: 640px; margin-bottom: 0; }
 .free-pill {
