@@ -139,7 +139,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
-.hero-card { padding: clamp(28px, 6vw, 64px); }
+.hero-card { padding: clamp(28px, 6vw, 64px); display: grid; gap: 20px; }
 .auth-card { padding: 28px; }
 .direction-demo { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
 .direction-demo span {
@@ -185,16 +185,11 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 .dashboard { padding-bottom: 80px; }
 .dashboard-hero, .stats-hero {
   padding: clamp(28px, 5vw, 56px);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 26px;
-}
-.stats-hero {
   display: flex;
   align-items: end;
   justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
 }
 .dashboard-copy { max-width: 670px; }
 .dashboard-copy p, .stats-hero p { font-size: 18px; max-width: 640px; margin-bottom: 0; }
@@ -216,13 +211,14 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 }
 .survey-demo {
   position: relative;
-  min-height: 420px;
+  min-height: 380px;
   display: grid;
   place-items: center;
+  margin-top: 6px;
 }
 .demo-phone {
-  width: min(330px, 100%);
-  min-height: 390px;
+  width: min(320px, 100%);
+  min-height: 360px;
   border-radius: 34px;
   padding: 18px;
   background: linear-gradient(155deg, #ffffff, #f4fff9 42%, #fff2e6);
@@ -241,7 +237,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   font-size: 13px;
 }
 .demo-card {
-  min-height: 188px;
+  min-height: 168px;
   border-radius: 26px;
   padding: 22px;
   background: var(--ink);
@@ -257,7 +253,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   background: rgba(255,255,255,0.08);
 }
 .demo-card h2 {
-  font-size: 27px;
+  font-size: 24px;
   line-height: 1.05;
   margin-bottom: 0;
 }

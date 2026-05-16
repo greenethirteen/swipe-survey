@@ -134,7 +134,7 @@ function AuthView({ onAuthed }) {
     <Shell compact>
       <main className="auth-grid">
         <section className="hero-card">
-          <div className="pill">Surveys people actually finish</div>
+          <div className="pill free-pill">Free to start</div>
           <h1>Turn boring questions into swipeable little moments.</h1>
           <p>
             Build a survey manually or let AI create it from a prompt. Share a link. Let people answer by swiping left, right, up, or down.
@@ -142,6 +142,7 @@ function AuthView({ onAuthed }) {
           <div className="direction-demo">
             <span>⬅️ No</span><span>➡️ Yes</span><span>⬆️ Strong yes</span><span>⬇️ Unsure</span>
           </div>
+          <AnimatedSurveyDemo />
         </section>
 
         <form className="auth-card" onSubmit={submit}>
@@ -202,15 +203,11 @@ function Dashboard({ navigate, user, logout }) {
       <main className="dashboard">
         <section className="dashboard-hero">
           <div className="dashboard-copy">
-            <div className="pill free-pill">Free to start</div>
-            <h1>Turn boring questions into swipeable little moments.</h1>
-            <p>Build a survey with AI, share one link, and make answering feel fast on every phone.</p>
-            <div className="hero-actions">
-              <button className="primary-btn large" onClick={() => navigate('/builder')}>+ New survey</button>
-              <span className="free-note">No payment required.</span>
-            </div>
+            <div className="pill">Creator dashboard</div>
+            <h1>Your surveys</h1>
+            <p>Create a new survey, copy share links, preview live surveys, and check results from one place.</p>
           </div>
-          <AnimatedSurveyDemo />
+          <button className="primary-btn large" onClick={() => navigate('/builder')}>+ New survey</button>
         </section>
 
         {message && <div className="toast">{message}</div>}
@@ -219,7 +216,7 @@ function Dashboard({ navigate, user, logout }) {
         {!loading && surveys.length === 0 && (
           <section className="empty-state">
             <h2>No surveys yet</h2>
-            <p>Start with AI, paste your own question set, or use the sample medical emergency survey.</p>
+            <p>Start with AI or use the sample medical emergency survey.</p>
             <button className="primary-btn" onClick={() => navigate('/builder')}>Build your first survey</button>
           </section>
         )}
