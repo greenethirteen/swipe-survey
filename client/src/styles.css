@@ -877,30 +877,31 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 .swipe-stage {
   display: grid;
   justify-items: center;
-  gap: 18px;
+  gap: 12px;
   touch-action: pan-y;
   min-height: calc(100vh - 210px);
 }
 .swipe-center-row {
   width: min(940px, 100%);
   display: grid;
-  grid-template-columns: minmax(160px, 0.75fr) minmax(0, 1.5fr) minmax(160px, 0.75fr);
-  gap: 16px;
-  align-items: center;
+  grid-template-columns: minmax(140px, 0.72fr) minmax(0, 1.56fr) minmax(140px, 0.72fr);
+  gap: 12px;
+  align-items: stretch;
 }
 .option-count-2 .swipe-center-row {
-  grid-template-columns: minmax(160px, 0.75fr) minmax(0, 1.5fr) minmax(160px, 0.75fr);
+  grid-template-columns: minmax(140px, 0.72fr) minmax(0, 1.56fr) minmax(140px, 0.72fr);
 }
 .swipe-card {
   width: 100%;
-  min-height: 520px;
-  max-height: min(780px, 72vh);
+  height: 100%;
+  min-height: 480px;
+  max-height: none;
   border-radius: 42px;
   background: var(--ink);
   color: white;
   border: 1px solid rgba(255,255,255,0.18);
   box-shadow: 0 34px 100px rgba(25,23,21,0.24);
-  padding: 36px 32px;
+  padding: 36px 28px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -989,10 +990,10 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   word-break: normal;
 }
 .answer-choice.compass-choice {
-  width: min(360px, 100%);
+  width: min(300px, 100%);
   align-self: stretch;
 }
-.swipe-stage > .answer-choice.compass-choice { width: min(540px, 100%); }
+.swipe-stage > .answer-choice.compass-choice { width: min(420px, 100%); }
 .demo-compass > .answer-choice.compact { width: 55%; }
 .swipe-center-row .answer-choice {
   width: 100%;
