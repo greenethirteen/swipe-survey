@@ -1,28 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { initializeApp } from 'firebase/app';
-import { browserLocalPersistence, getAuth, getRedirectResult, GoogleAuthProvider, setPersistence, signInWithPopup, signInWithRedirect, signOut } from 'firebase/auth';
 import './styles.css';
 
 const API_BASE = import.meta.env.VITE_API_URL || (window.location.port === '5173' ? 'http://localhost:8787' : '');
 const DIRECTIONS = ['left', 'right', 'up', 'down'];
 const ARROWS = { left: '⬅️', right: '➡️', up: '⬆️', down: '⬇️' };
 const DIRECTION_WORDS = { left: 'Swipe left', right: 'Swipe right', up: 'Swipe up', down: 'Swipe down' };
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
-const firebaseApp = initializeApp(firebaseConfig);
-const firebaseAuth = getAuth(firebaseApp);
-const googleProvider = new GoogleAuthProvider();
-googleProvider.setCustomParameters({ prompt: 'select_account' });
-const GOOGLE_REDIRECT_KEY = 'swipeSurveyGoogleRedirect';
-
 function makeId() {
   return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random());
 }
@@ -64,19 +47,6 @@ async function api(path, options = {}) {
   }
 }
 
-function withTimeout(promise, timeoutMs, message) {
-  let timeout;
-  const timeoutPromise = new Promise((_, reject) => {
-    timeout = setTimeout(() => reject(new Error(message)), timeoutMs);
-  });
-  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeout));
-}
-
-function isSafariBrowser() {
-  const ua = navigator.userAgent;
-  return /^((?!chrome|android|crios|fxios|edgios).)*safari/i.test(ua);
-}
-
 function useRoute() {
   const [path, setPath] = useState(window.location.pathname);
   useEffect(() => {
@@ -112,7 +82,6 @@ function App() {
   const logout = () => {
     setToken(null);
     setUser(null);
-    signOut(firebaseAuth).catch(() => {});
     navigate('/');
   };
 
@@ -173,37 +142,6 @@ function AuthView({ onAuthed }) {
 
   useEffect(() => {
     sessionStorage.removeItem('swipeSurveyGooglePending');
-    const hadRedirect = sessionStorage.getItem(GOOGLE_REDIRECT_KEY);
-    if (!hadRedirect) return;
-
-    let cancelled = false;
-    setBusy(true);
-    setError('');
-
-    getRedirectResult(firebaseAuth)
-      .then(async (credential) => {
-        if (cancelled) return;
-        const firebaseUser = credential?.user || firebaseAuth.currentUser;
-        if (!firebaseUser) throw new Error('Google did not return a signed-in account. Please try again.');
-        const idToken = await withTimeout(
-          firebaseUser.getIdToken(),
-          10000,
-          'Google signed in, but the account token took too long. Please try again.'
-        );
-        const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken }, timeoutMs: 15000 });
-        sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
-        onAuthed(data);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
-        setError(err.message || 'Google sign-in failed. Please try again.');
-        setBusy(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const submit = async (event) => {
@@ -220,38 +158,7 @@ function AuthView({ onAuthed }) {
     }
   };
 
-  const signInWithGoogle = async () => {
-    setBusy(true);
-    setError('');
-    try {
-      await setPersistence(firebaseAuth, browserLocalPersistence);
-      if (isSafariBrowser()) {
-        sessionStorage.setItem(GOOGLE_REDIRECT_KEY, '1');
-        await signInWithRedirect(firebaseAuth, googleProvider);
-        return;
-      }
-      const credential = await signInWithPopup(firebaseAuth, googleProvider);
-      const idToken = await withTimeout(
-        credential.user.getIdToken(),
-        10000,
-        'Google signed in, but the account token took too long. Please try again.'
-      );
-      const data = await api('/api/auth/firebase', { method: 'POST', body: { idToken }, timeoutMs: 15000 });
-      onAuthed(data);
-    } catch (err) {
-      if (err.code === 'auth/popup-closed-by-user') {
-        setError('Google sign-in was closed before it finished.');
-      } else if (err.code === 'auth/popup-blocked') {
-        setError('Your browser blocked the Google sign-in popup. Allow popups for this site and try again.');
-      } else {
-        setError(err.message || 'Google sign-in failed. Please try again.');
-      }
-      setBusy(false);
-    }
-  };
-
   const resetSignIn = () => {
-    sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
     setBusy(false);
     setError('');
   };
@@ -287,10 +194,6 @@ function AuthView({ onAuthed }) {
               <input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="At least 6 characters" required />
             </label>
             {error && <div className="error-box">{error}</div>}
-            <button type="button" className="google-btn" onClick={signInWithGoogle} disabled={busy}>
-              <span>G</span>
-              Continue with Google
-            </button>
             <button className="primary-btn" disabled={busy}>{busy ? 'One sec…' : mode === 'signup' ? 'Sign up' : 'Log in'}</button>
             {busy && (
               <button type="button" className="link-btn compact" onClick={resetSignIn}>
@@ -370,14 +273,7 @@ function Dashboard({ navigate, user, logout }) {
         {message && <div className="toast">{message}</div>}
         {loading ? <FullPageLoader label="Fetching surveys…" /> : null}
 
-        {!loading && surveys.length === 0 && (
-          <section className="empty-state">
-            <h2>No surveys yet</h2>
-            <p>Start with AI or use the sample medical emergency survey.</p>
-            <button className="primary-btn" onClick={() => navigate('/builder')}>Build your first survey</button>
-          </section>
-        )}
-
+        {!loading && surveys.length === 0 ? null : (
         <section className="survey-grid">
           {surveys.map((survey) => (
             <article className="survey-card" key={survey.id}>
@@ -396,6 +292,7 @@ function Dashboard({ navigate, user, logout }) {
             </article>
           ))}
         </section>
+        )}
       </main>
     </Shell>
   );
