@@ -204,15 +204,31 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 }
 .survey-demo {
   display: grid;
+  justify-items: center;
   margin-top: 4px;
 }
+.demo-phone-frame {
+  width: min(430px, 100%);
+  border-radius: 44px;
+  padding: 18px 14px 16px;
+  background: #151515;
+  box-shadow: 0 34px 80px rgba(25,23,21,0.24);
+  position: relative;
+}
+.demo-speaker {
+  width: 74px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.22);
+  margin: 0 auto 12px;
+}
 .demo-shell {
-  width: min(680px, 100%);
-  border-radius: 28px;
-  padding: 18px;
+  width: 100%;
+  border-radius: 30px;
+  padding: 14px;
   background: linear-gradient(155deg, #ffffff, #f4fff9 42%, #fff2e6);
   border: 1px solid rgba(25,23,21,0.1);
-  box-shadow: 0 22px 56px rgba(25,23,21,0.14);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.18);
   display: grid;
   gap: 12px;
   transition: background 0.35s ease, box-shadow 0.35s ease;
@@ -244,14 +260,14 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 .demo-compass-row {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(90px, 0.58fr) minmax(0, 1.7fr) minmax(90px, 0.58fr);
-  gap: 10px;
+  grid-template-columns: minmax(74px, 0.56fr) minmax(0, 1.6fr) minmax(74px, 0.56fr);
+  gap: 8px;
   align-items: stretch;
 }
 .demo-question-card {
-  min-height: 190px;
+  min-height: 172px;
   border-radius: 24px;
-  padding: 18px;
+  padding: 16px;
   background: var(--ink);
   color: white;
   display: grid;
@@ -271,7 +287,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   background: rgba(255,255,255,0.08);
 }
 .demo-question-card h2 {
-  font-size: 25px;
+  font-size: 22px;
   line-height: 1.05;
   margin-bottom: 0;
   letter-spacing: -0.015em;
@@ -287,7 +303,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   margin-bottom: 0;
 }
 .demo-final {
-  min-height: 300px;
+  min-height: 330px;
   border-radius: 24px;
   padding: 24px;
   background: #335cff;
@@ -303,7 +319,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
 }
 .demo-final > strong {
   display: block;
-  font-size: 72px;
+  font-size: 60px;
   line-height: 1;
   letter-spacing: -0.025em;
 }
@@ -574,7 +590,7 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   align-self: stretch;
 }
 .swipe-stage > .answer-choice.compass-choice { width: min(540px, 100%); }
-.demo-compass > .answer-choice.compact { width: 59%; }
+.demo-compass > .answer-choice.compact { width: 55%; }
 .swipe-center-row .answer-choice {
   width: 100%;
   min-height: 100%;
@@ -623,6 +639,8 @@ label { display: grid; gap: 8px; font-weight: 800; color: var(--muted); margin: 
   .dashboard-hero { padding: 22px; }
   .hero-actions { align-items: stretch; }
   .hero-actions .primary-btn { width: 100%; }
+  .demo-phone-frame { width: 100%; border-radius: 32px; padding: 12px 10px 12px; }
+  .demo-speaker { margin-bottom: 9px; }
   .demo-shell { padding: 12px; border-radius: 20px; }
   .demo-compass-row {
     grid-template-columns: minmax(74px, 0.55fr) minmax(0, 1.5fr) minmax(74px, 0.55fr);

@@ -286,24 +286,27 @@ function HomeSurveyDemo() {
 
   return (
     <div className="survey-demo" aria-label="Try a sample swipe survey">
-      <div className={`demo-shell theme-${done ? 'result' : questionIndex}`}>
-        <div className="demo-top">
-          <span>Try the demo</span>
-          <strong className="demo-progress">{done ? 'Result' : `${answers.length + 1} / ${demoQuestions.length}`}</strong>
-        </div>
-        {!done ? (
-          <>
-            <DemoCompassCard key={current.id} question={current} onAnswer={(direction) => setAnswers([...answers, direction])} />
-        <p className="demo-hint">Swipe the black card toward an answer.</p>
-          </>
-        ) : (
-          <div className="demo-final">
-            <span className="mini-badge">Demo result</span>
-            <strong>{score}%</strong>
-            <p>{positive} of {demoQuestions.length} answers showed positive intent.</p>
-            <button className="primary-btn" onClick={() => setAnswers([])}>Try again</button>
+      <div className="demo-phone-frame">
+        <div className="demo-speaker" />
+        <div className={`demo-shell theme-${done ? 'result' : questionIndex}`}>
+          <div className="demo-top">
+            <span>Try the demo</span>
+            <strong className="demo-progress">{done ? 'Result' : `${answers.length + 1} / ${demoQuestions.length}`}</strong>
           </div>
-        )}
+          {!done ? (
+            <>
+              <DemoCompassCard key={current.id} question={current} onAnswer={(direction) => setAnswers([...answers, direction])} />
+              <p className="demo-hint">Swipe the black card toward an answer.</p>
+            </>
+          ) : (
+            <div className="demo-final">
+              <span className="mini-badge">Demo result</span>
+              <strong>{score}%</strong>
+              <p>{positive} of {demoQuestions.length} answers showed positive intent.</p>
+              <button className="primary-btn" onClick={() => setAnswers([])}>Try again</button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
