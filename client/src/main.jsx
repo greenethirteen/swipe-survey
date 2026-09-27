@@ -77,6 +77,7 @@ function App() {
   }, []);
 
   if (path.startsWith('/s/')) return <SurveyTaker slug={decodeURIComponent(path.split('/s/')[1] || '')} />;
+  if (path === '/admin' || path.startsWith('/admin/')) return <AdminView navigate={navigate} />;
   if (checking) return <FullPageLoader label="Loading your surveys…" />;
   if (!user) return <AuthView onAuthed={(data) => { setToken(data.token); setUser(data.user); navigate('/'); }} />;
 
@@ -86,7 +87,6 @@ function App() {
     navigate('/');
   };
 
-  if (path === '/admin' || path.startsWith('/admin/')) return <AdminView navigate={navigate} logout={logout} />;
   if (path.startsWith('/builder')) return <Builder navigate={navigate} user={user} logout={logout} />;
   if (path.startsWith('/stats/')) return <StatsView surveyId={path.split('/stats/')[1]} navigate={navigate} logout={logout} />;
   return <Dashboard navigate={navigate} user={user} logout={logout} />;
@@ -274,18 +274,49 @@ function AuthView({ onAuthed }) {
   );
 }
 
-function AdminView({ navigate, logout }) {
+function AdminView({ navigate }) {
+  const [password, setPassword] = useState(() => sessionStorage.getItem('swipeSurveyAdminPassword') || '');
+  const [authenticated, setAuthenticated] = useState(Boolean(sessionStorage.getItem('swipeSurveyAdminPassword')));
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(sessionStorage.getItem('swipeSurveyAdminPassword')));
   const [error, setError] = useState('');
 
+  const loadUsers = async (secret = password) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api('/api/admin/users', { headers: { 'X-Admin-Password': secret } });
+      setUsers(data.users || []);
+      setAuthenticated(true);
+      sessionStorage.setItem('swipeSurveyAdminPassword', secret);
+    } catch (err) {
+      sessionStorage.removeItem('swipeSurveyAdminPassword');
+      setAuthenticated(false);
+      setPassword('');
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    api('/api/admin/users')
-      .then((data) => setUsers(data.users || []))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+    if (authenticated && password) loadUsers(password);
   }, []);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (password) await loadUsers(password);
+  };
+
+  const lock = () => {
+    sessionStorage.removeItem('swipeSurveyAdminPassword');
+    setAuthenticated(false);
+    setPassword('');
+    setUsers([]);
+    setQuery('');
+    setError('');
+  };
 
   const filteredUsers = users.filter((user) => {
     const needle = query.trim().toLowerCase();
@@ -304,18 +335,38 @@ function AdminView({ navigate, logout }) {
     }).format(new Date(value));
   };
 
+  if (!authenticated) {
+    return (
+      <Shell compact>
+        <main className="admin-login-page">
+          <form className="admin-login-card" onSubmit={submit}>
+            <div className="pill">Private</div>
+            <h1>Admin</h1>
+            <p className="muted">Enter the admin password to view signups.</p>
+            <label>
+              Password
+              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus autoComplete="current-password" placeholder="Password" />
+            </label>
+            {error && <div className="error-box">{error}</div>}
+            <button className="primary-btn" disabled={!password || loading}>{loading ? 'Checking…' : 'Enter admin'}</button>
+            <button type="button" className="link-btn" onClick={() => navigate('/')}>Back to site</button>
+          </form>
+        </main>
+      </Shell>
+    );
+  }
+
   return (
     <Shell compact>
       <main className="admin-page">
         <div className="admin-topbar">
           <div>
-            <button className="back-btn" onClick={() => navigate('/')}>← Dashboard</button>
+            <button className="back-btn" onClick={() => navigate('/')}>← Site</button>
             <h1>Signups</h1>
             <p className="muted">Everyone who has created an account.</p>
           </div>
-          <button className="link-btn" onClick={logout}>Log out</button>
+          <button className="link-btn" onClick={lock}>Lock admin</button>
         </div>
-
         {loading ? (
           <div className="admin-card admin-empty">Loading signups…</div>
         ) : error ? (
@@ -326,27 +377,14 @@ function AdminView({ navigate, logout }) {
               <div className="admin-stat"><span>Total signups</span><strong>{users.length}</strong></div>
               <div className="admin-stat"><span>Showing</span><strong>{filteredUsers.length}</strong></div>
             </div>
-
             <div className="admin-card">
               <div className="admin-toolbar">
-                <input
-                  className="admin-search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search name or email…"
-                />
+                <input className="admin-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search name or email…" />
               </div>
-
               {filteredUsers.length ? (
                 <div className="admin-table-wrap">
                   <table className="admin-table">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Signed up</th>
-                      </tr>
-                    </thead>
+                    <thead><tr><th>Name</th><th>Email</th><th>Signed up</th></tr></thead>
                     <tbody>
                       {filteredUsers.map((user) => (
                         <tr key={user.id}>
@@ -358,9 +396,7 @@ function AdminView({ navigate, logout }) {
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <div className="admin-empty">No signups match your search.</div>
-              )}
+              ) : <div className="admin-empty">No signups match your search.</div>}
             </div>
           </>
         )}
