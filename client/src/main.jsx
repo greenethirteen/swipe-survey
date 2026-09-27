@@ -86,6 +86,7 @@ function App() {
     navigate('/');
   };
 
+  if (path === '/admin' || path.startsWith('/admin/')) return <AdminView navigate={navigate} logout={logout} />;
   if (path.startsWith('/builder')) return <Builder navigate={navigate} user={user} logout={logout} />;
   if (path.startsWith('/stats/')) return <StatsView surveyId={path.split('/stats/')[1]} navigate={navigate} logout={logout} />;
   return <Dashboard navigate={navigate} user={user} logout={logout} />;
@@ -269,6 +270,101 @@ function AuthView({ onAuthed }) {
         <span>Built in Abu Dhabi</span>
         <span>© 2026 SwipeSurvey. All rights reserved.</span>
       </footer>
+    </Shell>
+  );
+}
+
+function AdminView({ navigate, logout }) {
+  const [users, setUsers] = useState([]);
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    api('/api/admin/users')
+      .then((data) => setUsers(data.users || []))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredUsers = users.filter((user) => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return true;
+    return [user.name, user.email].some((value) => String(value || '').toLowerCase().includes(needle));
+  });
+
+  const formatDate = (value) => {
+    if (!value) return '—';
+    return new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    }).format(new Date(value));
+  };
+
+  return (
+    <Shell compact>
+      <main className="admin-page">
+        <div className="admin-topbar">
+          <div>
+            <button className="back-btn" onClick={() => navigate('/')}>← Dashboard</button>
+            <h1>Signups</h1>
+            <p className="muted">Everyone who has created an account.</p>
+          </div>
+          <button className="link-btn" onClick={logout}>Log out</button>
+        </div>
+
+        {loading ? (
+          <div className="admin-card admin-empty">Loading signups…</div>
+        ) : error ? (
+          <div className="admin-card error-box">{error}</div>
+        ) : (
+          <>
+            <div className="admin-stats">
+              <div className="admin-stat"><span>Total signups</span><strong>{users.length}</strong></div>
+              <div className="admin-stat"><span>Showing</span><strong>{filteredUsers.length}</strong></div>
+            </div>
+
+            <div className="admin-card">
+              <div className="admin-toolbar">
+                <input
+                  className="admin-search"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Search name or email…"
+                />
+              </div>
+
+              {filteredUsers.length ? (
+                <div className="admin-table-wrap">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Signed up</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map((user) => (
+                        <tr key={user.id}>
+                          <td><strong>{user.name || '—'}</strong></td>
+                          <td>{user.email}</td>
+                          <td>{formatDate(user.createdAt)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="admin-empty">No signups match your search.</div>
+              )}
+            </div>
+          </>
+        )}
+      </main>
     </Shell>
   );
 }
