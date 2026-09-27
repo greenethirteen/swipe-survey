@@ -611,14 +611,18 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
-function requireAdmin(req, res, next) {
-  const adminEmail = cleanText(process.env.ADMIN_EMAIL).toLowerCase();
-  if (!adminEmail) return res.status(503).json({ error: 'Admin access is not configured.' });
-  if (req.user.email !== adminEmail) return res.status(403).json({ error: 'Admin access required.' });
+function requireAdminPassword(req, res, next) {
+  const expected = String(process.env.ADMIN_PASSWORD || '1059');
+  const supplied = String(req.headers['x-admin-password'] || '');
+  const expectedBuffer = Buffer.from(expected);
+  const suppliedBuffer = Buffer.from(supplied);
+  if (expectedBuffer.length !== suppliedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)) {
+    return res.status(401).json({ error: 'Incorrect admin password.' });
+  }
   next();
 }
 
-app.get('/api/admin/users', requireAuth, requireAdmin, (req, res) => {
+app.get('/api/admin/users', requireAdminPassword, (req, res) => {
   const db = readDb();
   const users = [...db.users]
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
