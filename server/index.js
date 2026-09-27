@@ -611,6 +611,26 @@ app.get('/api/auth/me', requireAuth, (req, res) => {
   res.json({ user: publicUser(req.user) });
 });
 
+function requireAdmin(req, res, next) {
+  const adminEmail = cleanText(process.env.ADMIN_EMAIL).toLowerCase();
+  if (!adminEmail) return res.status(503).json({ error: 'Admin access is not configured.' });
+  if (req.user.email !== adminEmail) return res.status(403).json({ error: 'Admin access required.' });
+  next();
+}
+
+app.get('/api/admin/users', requireAuth, requireAdmin, (req, res) => {
+  const db = readDb();
+  const users = [...db.users]
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    .map(publicUser);
+
+  res.json({
+    users,
+    count: users.length,
+    generatedAt: new Date().toISOString()
+  });
+});
+
 app.get('/api/surveys/example', requireAuth, (_req, res) => {
   res.json({ survey: exampleSurvey() });
 });
